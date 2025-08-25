@@ -1,0 +1,60 @@
+#!/usr/bin/env python
+#
+# Simple Age Calculator in Google App Engine (Python 2.7 webapp)
+#
+from google.appengine.ext import webapp
+from google.appengine.ext.webapp import util
+from datetime import datetime
+
+class MainHandler(webapp.RequestHandler):
+    def get(self):
+        # Simple HTML form to enter Date of Birth
+        self.response.out.write("""
+            <html>
+            <head><title>Age Calculator</title></head>
+            <body style="font-family: Arial; text-align:center; padding-top:50px;">
+                <h1>Age Calculator</h1>
+                <form method="post">
+                    <label for="dob">Enter your Date of Birth (YYYY-MM-DD):</label><br><br>
+                    <input type="text" name="dob" placeholder="2000-08-25" required>
+                    <br><br>
+                    <input type="submit" value="Calculate Age">
+                </form>
+            </body>
+            </html>
+        """)
+
+    def post(self):
+        dob_str = self.request.get("dob")
+        try:
+            dob = datetime.strptime(dob_str, "%Y-%m-%d")
+            today = datetime.today()
+            age = today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
+
+            self.response.out.write("""
+                <html>
+                <head><title>Age Result</title></head>
+                <body style="font-family: Arial; text-align:center; padding-top:50px;">
+                    <h1>Your Age</h1>
+                    <p><b>%s</b> years</p>
+                    <a href="/">Back</a>
+                </body>
+                </html>
+            """ % age)
+
+        except ValueError:
+            self.response.out.write("""
+                <html>
+                <body style="font-family: Arial; text-align:center; padding-top:50px;">
+                    <h3 style="color:red;">Invalid Date Format! Use YYYY-MM-DD.</h3>
+                    <a href="/">Try Again</a>
+                </body>
+                </html>
+            """)
+
+def main():
+    application = webapp.WSGIApplication([('/', MainHandler)], debug=True)
+    util.run_wsgi_app(application)
+
+if __name__ == '__main__':
+    main()
