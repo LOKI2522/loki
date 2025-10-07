@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Dashboard - Campus Connect</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+
+    <style>
+        :root {
+            --theme-primary: #f43a09;
+            --theme-secondary: #ffb766;
+            --theme-accent: #68d388;
+            --theme-light-accent: #e9f7ef;
+            --theme-bg-light: #FFFFFF;
+            --theme-bg-medium: #f8f9fa;
+            --text-dark: #212529;
+            --border-color: #dee2e6;
+            --glow-color: rgba(244, 58, 9, 0.6);
+            --card-header-bg: #fdf8f0; 
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        body { background-color: var(--theme-bg-medium); color: var(--text-dark); overflow-x: hidden; }
+        .sidebar { width: 260px; background: var(--theme-bg-light); border-right: 1px solid var(--border-color); position: fixed; top: 0; left: 0; height: 100vh; z-index: 1001; transform: translateX(-100%); transition: transform 0.4s ease; }
+        .sidebar.active { transform: translateX(0); }
+        .sidebar-header { padding: 20px; display: flex; justify-content: space-between; align-items: center; font-size: 1.5rem; font-weight: 600; color: var(--theme-primary); border-bottom: 1px solid var(--border-color); }
+        .sidebar-header .close-btn { font-size: 1.8rem; cursor: pointer; }
+        .sidebar-menu { list-style: none; padding-top: 20px; }
+        .sidebar-menu li a { display: flex; align-items: center; padding: 15px 25px; color: var(--text-dark); text-decoration: none; font-size: 1.1rem; border-left: 4px solid transparent; transition: all 0.3s; }
+        .sidebar-menu li a:hover, .sidebar-menu li a.active { background-color: #f1f1f1; border-left-color: var(--theme-primary); color: var(--theme-primary); }
+        .sidebar-menu li a i { margin-right: 15px; width: 20px; }
+        .header { background-color: var(--theme-bg-light); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); position: sticky; top: 0; z-index: 999; }
+        .hamburger-menu { font-size: 1.5rem; cursor: pointer; transition: transform 0.3s ease, color 0.3s ease; }
+        .hamburger-menu:hover { transform: scale(1.1); color: var(--theme-primary); }
+        .college-title { display: flex; align-items: center; gap: 15px; position: absolute; left: 50%; transform: translateX(-50%); }
+        .college-title img { width: 45px; height: 45px; }
+        .college-title h1 { font-size: 1.3rem; font-weight: 600; white-space: nowrap; }
+        .header-right { display: flex; align-items: center; gap: 25px; }
+        .profile-container { position: relative; cursor: pointer; display: flex; align-items: center; gap: 10px; }
+        .profile-dropdown { position: absolute; top: 120%; right: 0; background-color: var(--theme-bg-light); border-radius: 8px; overflow: hidden; width: 220px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); transform: translateY(10px); opacity: 0; visibility: hidden; transition: all 0.3s ease; z-index: 1000;}
+        .profile-dropdown.active { transform: translateY(0); opacity: 1; visibility: visible; }
+        .profile-dropdown a, .profile-dropdown .profile-info { display: flex; align-items: center; padding: 12px 15px; text-decoration: none; color: var(--text-dark); }
+        .profile-dropdown .profile-info { border-bottom: 1px solid var(--border-color); }
+        .profile-dropdown a i { margin-right: 10px; }
+        .profile-dropdown a:hover { background-color: var(--theme-light-accent); }
+        .main-content { transition: margin-left 0.4s ease; }
+        .sidebar.active ~ .main-content { margin-left: 260px; }
+        .page-content { padding: 30px; }
+        .page { display: none; }
+        .page.active { display: block; animation: fadeIn 0.5s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;}
+        .action-cards-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 30px; margin-top: 30px; }
+        .action-card { background: var(--theme-bg-light); padding: 30px; border-radius: 15px; text-align: center; cursor: pointer; transition: all 0.3s ease; border: 1px solid var(--border-color); }
+        .action-card:hover { transform: translateY(-10px); box-shadow: 0 0 25px -5px var(--glow-color); }
+        .action-card .icon { font-size: 3.5rem; margin-bottom: 20px; color: var(--theme-primary); }
+        .action-card h3 { font-size: 1.3rem; font-weight: 500; color: var(--text-dark); }
+        .action-card p { color: #6c757d; font-size: 1rem; }
+        .btn-primary { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; background-color: var(--theme-primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 1rem; font-weight: 500; transition: background-color 0.3s, transform 0.2s; }
+        .btn-primary:hover { background-color: #d32f00; transform: scale(1.05); }
+        .hod-class-card .btn-view:hover { transform: none; background-color: #d32f00; }
+        .back-button { cursor: pointer; font-weight: 500; display: inline-flex; align-items: center; gap: 5px; transition: transform 0.3s ease; background: none; border: none; font-size: 1rem; }
+        .back-button:hover { transform: translateX(-5px); color: var(--theme-primary); }
+        .form-group { display: flex; flex-direction: column; }
+        .form-group label { margin-bottom: 5px; font-weight: 500; }
+        .form-group input, .form-group select, .form-group textarea { padding: 10px; border: 1px solid var(--border-color); border-radius: 5px; font-family: 'Poppins', sans-serif;}
+        .btn-save { background-color: var(--theme-accent); }
+        .btn-edit { background-color: var(--theme-secondary); color: var(--text-dark); }
+        .data-table-container { background: #fff; border-radius: 10px; padding: 20px; overflow-x: auto; margin-top: 20px; }
+        .data-table { width: 100%; border-collapse: collapse; }
+        .data-table th, .data-table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); vertical-align: middle; }
+        .data-table th { background-color: var(--theme-bg-medium); font-weight: 600; }
+        #header-profile-pic { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--theme-primary); object-fit: cover; }
+        .profile-page-grid { display: grid; grid-template-columns: 200px 1fr; gap: 40px; align-items: flex-start; }
+        .profile-picture-container { text-align: center; }
+        .profile-picture-container img { width: 180px; height: 180px; border-radius: 50%; object-fit: cover; border: 5px solid var(--theme-primary); margin-bottom: 15px; }
+        .profile-picture-container .btn-upload { display: none; }
+        .profile-picture-container input[type="file"] { display: none; }
+        .profile-details-container .form-group input[readonly] { background-color: #e9ecef; cursor: not-allowed; }
+        .hod-class-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+        .hod-class-card { background: #fff; border-radius: 12px; padding: 25px; display: flex; flex-direction: column; justify-content: space-between; align-items: center; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: transform 0.3s ease, box-shadow 0.3s ease; }
+        .hod-class-card:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(244, 58, 9, 0.15); }
+        .class-card-icon { font-size: 2.5rem; color: #fff; background-color: var(--theme-primary); width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 15px; }
+        .class-card-title { font-size: 1.2rem; font-weight: 600; color: var(--text-dark); }
+        .class-card-dept { font-size: 0.9rem; color: #6c757d; margin-bottom: 20px; }
+        .hod-class-card .btn-view { margin-top: auto; width: 100%; }
+        .filter-container { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .marks-table input { width: 60px; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; }
+        .marks-table th { font-size: 0.8rem; }
+        .marks-table input:read-only { background-color: #e9ecef; cursor: not-allowed; }
+        .timetable-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .day-column h3 { text-align: center; background-color: var(--theme-primary); color: white; padding: 10px; border-radius: 8px 8px 0 0; }
+        .day-column ul { list-style: none; padding: 0; }
+        .day-column li { background: #fff; border: 1px solid var(--border-color); border-top: none; padding: 15px; }
+        .day-column li:last-child { border-radius: 0 0 8px 8px; }
+        .day-column li span { display: block; }
+        .day-column .time { font-weight: 600; font-size: 1.1rem; }
+        .day-column .class-details { font-size: 0.9rem; color: #6c757d; }
+        .file-upload-container { background-color: #fff; padding: 25px; border-radius: 10px; border: 1px solid var(--border-color); }
+        .file-upload-box { border: 2px dashed var(--border-color); border-radius: 8px; padding: 20px; text-align: center; margin-bottom: 20px; }
+        .file-upload-box input[type="file"] { display: none; }
+        .attendance-btn-group { display: flex; gap: 8px; }
+        .attendance-btn-group button { padding: 6px 12px; border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer; background-color: #fff; transition: all 0.2s; }
+        .attendance-btn-group button.present.active { background-color: #10B981; color: white; border-color: #10B981; }
+        .attendance-btn-group button.absent.active { background-color: #EF4444; color: white; border-color: #EF4444; }
+        .attendance-btn-group button.onduty.active { background-color: #3B82F6; color: white; border-color: #3B82F6; }
+        .reason-container { margin-top: 10px; display: none; }
+        .reason-container textarea { width: 100%; padding: 8px; border-radius: 5px; border: 1px solid var(--border-color); font-size: 0.9rem; resize: vertical; }
+        .todays-class-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 30px;
+        }
+        .course-card { 
+            background-color: var(--theme-bg-light); 
+            border-radius: 12px;
+            border: none;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.08); 
+            overflow: hidden; 
+            transition: all 0.3s ease; 
+            position: relative; 
+        }
+        .course-card:hover { 
+            transform: translateY(-8px); 
+            box-shadow: 0 12px 30px rgba(0,0,0,0.12); 
+        }
+        .course-card.completed { opacity: 0.75; }
+        .course-card.completed:hover { transform: none; box-shadow: 0 8px 25px rgba(0,0,0,0.08); }
+        .completed-tag { 
+            position: absolute; top: 10px; right: -40px; 
+            background-color: var(--theme-accent); color: white; 
+            padding: 4px 40px; font-size: 0.8rem; font-weight: 600; 
+            transform: rotate(45deg); text-align: center; z-index: 1; 
+        }
+        .course-card-header { 
+            padding: 18px 25px; 
+            background: linear-gradient(135deg, #ff8a65, #f4511e);
+            border-bottom: none;
+        }
+        .course-card-header h4 { 
+            font-size: 1.2rem; 
+            font-weight: 600; 
+            color: white;
+            margin: 0; 
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.2);
+        }
+        .course-card-body { 
+            padding: 25px; 
+            background-color: #fff;
+        }
+        .course-card-details { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 18px; 
+            font-size: 0.9rem;
+            color: #555; 
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .course-card-details p {
+            margin: 0;
+        }
+        .course-card-details span { 
+            display: block; 
+            font-weight: 500;
+            color: #888; 
+            font-size: 0.8rem;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+        }
+        .course-card-actions ul { list-style: none; padding: 0; margin: 0; }
+        .course-card-actions li a { 
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 14px 10px;
+            text-decoration: none; 
+            color: #444;
+            border-radius: 8px;
+            transition: all 0.2s ease-in-out; 
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+        .course-card-actions li a:hover { 
+            background-color: var(--theme-light-accent);
+            color: var(--theme-accent); 
+            padding-left: 15px;
+        }
+        .course-card-actions li a .fas { transition: transform 0.2s; }
+        .course-card-actions li a:hover .fas { transform: translateX(5px); }
+
+        /* === NEW CALENDAR STYLES (Copied from HOD) === */
+        .calendar-container { 
+            background: #fff; 
+            border-radius: 10px; 
+            padding: 20px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .calendar-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 20px; 
+        }
+        .calendar-header h3 { font-size: 1.5rem; }
+        .calendar-header button { 
+            background: none; 
+            border: none; 
+            font-size: 1.5rem; 
+            cursor: pointer; 
+            transition: color 0.3s; 
+        }
+        .calendar-header button:hover { color: var(--theme-primary); }
+        .calendar-grid { 
+            display: grid; 
+            grid-template-columns: repeat(7, 1fr); 
+            gap: 5px; 
+        }
+        .calendar-day-name { 
+            text-align: center; 
+            font-weight: 600; 
+            color: #6c757d; 
+            padding: 10px 0; 
+        }
+        .calendar-day { 
+            border: 1px solid var(--border-color); 
+            border-radius: 8px; 
+            min-height: 100px; 
+            padding: 10px; 
+            cursor: pointer; 
+            transition: background-color 0.2s; 
+            display: flex; 
+            flex-direction: column; 
+        }
+        .calendar-day:hover { background-color: #f8f9fa; }
+        .calendar-day.not-current-month { background-color: #f8f9fa; color: #adb5bd; pointer-events: none; }
+        .calendar-day.holiday { background-color: #ffeef0; }
+        .calendar-day .day-number { font-size: 1.1rem; font-weight: 600; }
+        .calendar-day.holiday .day-number { color: #d90429; }
+        .calendar-day .day-activity { 
+            font-size: 0.75rem; 
+            margin-top: 5px; 
+            color: #495057; 
+            display: -webkit-box; 
+            -webkit-line-clamp: 2; 
+            -webkit-box-orient: vertical; 
+            overflow: hidden; 
+        }
+        .form-modal { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background-color: rgba(0,0,0,0.5); z-index: 1002; display: none; 
+            justify-content: center; align-items: center; 
+        }
+        .form-modal.active { display: flex; }
+        .form-modal-content { 
+            background-color: var(--theme-bg-light); padding: 30px; border-radius: 15px; 
+            width: 90%; max-width: 400px; position: relative; 
+        }
+        .form-modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .form-modal-header .close-form-btn { font-size: 1.8rem; cursor: pointer; }
+
+        /* Styles for event modal */
+        #event-details-content ul { list-style-type: none; padding: 0; }
+        #event-details-content li {
+            background: var(--theme-bg-medium);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 4px solid var(--theme-primary);
+        }
+        #event-details-content li h4 { margin: 0 0 5px 0; font-size: 1.1rem; }
+        #event-details-content li p { margin: 0; color: #555; }
+    </style>
+</head>
+<body>
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header"> Staff Menu <i class="fas fa-times close-btn" id="close-sidebar-btn"></i></div>
+        <ul class="sidebar-menu">
+            <li><a href="#" id="sidebar-home" class="nav-link active"><i class="fas fa-home"></i> Home</a></li>
+            <li><a href="#" id="sidebar-marks" class="nav-link"><i class="fas fa-marker"></i> Mark Management</a></li>
+            <li><a href="#" id="sidebar-attendance" class="nav-link"><i class="fas fa-calendar-check"></i> Attendance Report</a></li>
+            <li><a href="#" id="sidebar-timetable" class="nav-link"><i class="fas fa-calendar-alt"></i> Timetable</a></li>
+            <li><a href="#" id="sidebar-lesson-plan" class="nav-link"><i class="fas fa-book-open"></i> Lesson Plan</a></li>
+        </ul>
+    </nav>
+
+    <div class="main-content">
+        <header class="header">
+            <i class="fas fa-bars hamburger-menu" id="hamburger-menu"></i>
+            <div class="college-title">
+                <img src="/uploads/1st.jpg" alt="ESEC Logo">
+                <h1>Erode Sengunthar Engineering College</h1>
+            </div>
+            <div class="header-right">
+                <div class="profile-container" id="profile-toggler">
+                    <img id="header-profile-pic" src="https://placehold.co/48x48/cccccc/ffffff?text=S" alt="Profile Picture">
+                    <div class="profile-dropdown" id="profile-dropdown">
+                        <div class="profile-info">
+                            <div>
+                                <p id="header-user-name" style="font-weight: 600; color: #212529;">Loading...</p>
+                                <p id="header-user-role" style="font-size: 0.8rem; color: #6c757d;">Staff</p>
+                            </div>
+                        </div>
+                        <a href="#" id="profile-section-link"><i class="fas fa-user-edit"></i> My Profile</a>
+                        <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="page-content">
+            <div id="main-dashboard-view" class="page active">
+                <div class="page-header"><h2 style="font-size: 1.8rem; font-weight: 600;" id="welcome-heading">Loading...</h2></div>
+                
+                <div id="course-workload-section">
+                    <h2 style="font-size: 1.8rem; font-weight: 600; margin-bottom: 20px;">Today's Classes</h2>
+                    <div class="todays-class-container" id="workload-cards-container"></div>
+                </div>
+
+                <div class="action-cards-container">
+                    <div id="view-marks-btn" class="action-card">
+                        <div class="icon"><i class="fas fa-marker"></i></div>
+                        <h3>Mark Management</h3>
+                        <p>Enter and report marks for your classes.</p>
+                    </div>
+                    <div id="view-attendance-btn" class="action-card">
+                        <div class="icon"><i class="fas fa-calendar-check"></i></div>
+                        <h3>Attendance Report</h3>
+                        <p>Generate reports for your classes.</p>
+                    </div>
+                    <div id="view-timetable-btn" class="action-card">
+                        <div class="icon"><i class="fas fa-calendar-alt"></i></div>
+                        <h3>View Timetable</h3>
+                        <p>See your full weekly schedule.</p>
+                    </div>
+                    <div id="view-lesson-plan-btn" class="action-card">
+                        <div class="icon"><i class="fas fa-book-open"></i></div>
+                        <h3>Lesson Plan</h3>
+                        <p>Upload and manage course materials.</p>
+                    </div>
+                     <div id="view-calendar-btn" class="action-card">
+                        <div class="icon"><i class="fas fa-calendar-day"></i></div>
+                        <h3>Academic Calendar</h3>
+                        <p>View the official schedule.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="mark-management-view" class="page"></div>
+            <div id="mark-entry-view" class="page"></div>
+            <div id="attendance-management-view" class="page"></div>
+            <div id="attendance-details-view" class="page"></div>
+            <div id="profile-view" class="page">
+                <div class="page-header">
+                    <button class="back-button" onclick="showView('main-dashboard-view')"><i class="fas fa-arrow-left"></i> Back</button>
+                    <h2>Edit User Profile</h2>
+                    <div>
+                        <button id="edit-profile-btn" class="btn-primary btn-edit"><i class="fas fa-edit"></i> Edit</button>
+                        <button id="save-profile-btn" class="btn-primary btn-save" style="display: none;"><i class="fas fa-save"></i> Save Changes</button>
+                    </div>
+                </div>
+                <form id="user-profile-form" class="data-table-container"></form>
+            </div>
+            <div id="timetable-view" class="page"></div>
+            <div id="lesson-plan-view" class="page"></div>
+            <div id="file-upload-view" class="page"></div>
+            <div id="attendance-taking-view" class="page"></div>
+            <div id="calendar-view" class="page"></div> </main>
+    </div>
+    
+    <div id="event-details-modal" class="form-modal">
+        <div class="form-modal-content">
+            <div class="form-modal-header">
+                <h3 id="event-details-title">Events on Date</h3>
+                <i class="fas fa-times close-form-btn" onclick="document.getElementById('event-details-modal').classList.remove('active')"></i>
+            </div>
+            <div id="event-details-content">
+                <p>No events scheduled for this day.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    let userProfileData = {};
+
+    function showView(viewId) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById(viewId)?.classList.add('active');
+        document.querySelectorAll('.sidebar-menu .nav-link').forEach(link => link.classList.remove('active'));
+        let activeLink;
+        if (viewId.includes('mark')) activeLink = document.getElementById('sidebar-marks');
+        else if (viewId.includes('attendance')) activeLink = document.getElementById('sidebar-attendance');
+        else if (viewId.includes('timetable')) activeLink = document.getElementById('sidebar-timetable');
+        else if (viewId.includes('lesson-plan') || viewId.includes('file-upload')) activeLink = document.getElementById('sidebar-lesson-plan');
+        else activeLink = document.getElementById('sidebar-home');
+        activeLink?.classList.add('active');
+    }
+
+    function formatTime12Hour(timeString) {
+        if (!timeString) return '';
+        const [hourString, minute] = timeString.split(':');
+        const hour = +hourString;
+        const period = hour >= 12 ? 'PM' : 'AM';
+        const adjustedHour = hour % 12 || 12;
+        const formattedHour = String(adjustedHour).padStart(2, '0');
+        return `${formattedHour}:${minute} ${period}`;
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser') || 'null');
+        initializeDashboard(loggedInUser);
+        setupEventListeners();
+    });
+
+    function setupEventListeners() {
+        document.getElementById('hamburger-menu').addEventListener('click', (e) => {
+            e.stopPropagation(); document.getElementById('sidebar').classList.toggle('active');
+        });
+        document.getElementById('close-sidebar-btn').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.remove('active');
+        });
+        const profileToggler = document.getElementById('profile-toggler');
+        profileToggler.addEventListener('click', (e) => {
+            e.stopPropagation(); document.getElementById('profile-dropdown').classList.toggle('active');
+        });
+        document.addEventListener('click', (e) => {
+            if (!profileToggler.contains(e.target)) {
+                document.getElementById('profile-dropdown').classList.remove('active');
+            }
+        });
+        document.getElementById('sidebar-home').addEventListener('click', (e) => { e.preventDefault(); showView('main-dashboard-view'); });
+        document.getElementById('sidebar-marks').addEventListener('click', (e) => { e.preventDefault(); populateMarkManagementView(); });
+        document.getElementById('sidebar-attendance').addEventListener('click', (e) => { e.preventDefault(); populateAttendanceManagementView(); });
+        document.getElementById('sidebar-timetable').addEventListener('click', (e) => { e.preventDefault(); populateFullTimetableView(); });
+        document.getElementById('sidebar-lesson-plan').addEventListener('click', (e) => { e.preventDefault(); populateLessonPlanView(); });
+        
+        document.getElementById('profile-section-link').addEventListener('click', (e) => {
+            e.preventDefault();
+            populateNewProfilePage(userProfileData);
+            showView('profile-view');
+            document.getElementById('profile-dropdown').classList.remove('active');
+        });
+        document.getElementById('logoutBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            localStorage.removeItem('loggedInUser');
+            window.location.href = 'login.html';
+        });
+        document.getElementById('view-marks-btn').addEventListener('click', populateMarkManagementView);
+        document.getElementById('view-attendance-btn').addEventListener('click', populateAttendanceManagementView);
+        document.getElementById('view-timetable-btn').addEventListener('click', populateFullTimetableView);
+        document.getElementById('view-lesson-plan-btn').addEventListener('click', populateLessonPlanView);
+        document.getElementById('view-calendar-btn').addEventListener('click', () => populateCalendarView());
+    }
+
+    async function initializeDashboard(user) {
+        if (!user || !user.email) {
+            window.location.href = 'login.html'; return;
+        }
+        try {
+            const response = await fetch(`http://localhost:3001/api/profile?email=${encodeURIComponent(user.email)}`);
+            if (!response.ok) throw new Error('Profile not found');
+            const profile = await response.json();
+            userProfileData = { ...profile, ...user };
+            localStorage.setItem('loggedInUser', JSON.stringify(userProfileData));
+            document.getElementById('header-user-role').textContent = userProfileData.role || 'Staff';
+            populateHeader(userProfileData);
+            populateTodaysWorkload();
+        } catch (error) { console.error("Dashboard Init Error:", error); }
+    }
+
+    function populateHeader(profile) {
+        if (!profile) return;
+        document.getElementById('welcome-heading').textContent = `Welcome back, ${profile.name || 'User'}`;
+        document.getElementById('header-user-name').textContent = profile.name || 'User';
+        const imageUrl = profile.profile_picture_url ? `${profile.profile_picture_url}?t=${new Date().getTime()}` : `https://placehold.co/48x48/cccccc/ffffff?text=${profile.name ? profile.name.charAt(0) : 'S'}`;
+        document.getElementById('header-profile-pic').src = imageUrl;
+    }
+    
+    // **FIXED FUNCTION**
+    async function populateTodaysWorkload() {
+        const container = document.getElementById('workload-cards-container');
+        if (!container) return;
+        container.innerHTML = "<p>Loading today's schedule...</p>";
+        try {
+            // This single API call now handles the logic for working/non-working days on the backend
+            const response = await fetch(`http://localhost:3001/api/staff/timetables/today?email=${encodeURIComponent(userProfileData.email)}`);
+            if (!response.ok) {
+                throw new Error(`Server returned an error: ${response.status}`);
+            }
+            const data = await response.json();
+            
+            // The backend returns an empty array if it's a non-working day.
+            if (!data.success || !data.todayTimetable || data.todayTimetable.length === 0) {
+                container.innerHTML = '<p>No classes scheduled for today. It might be a holiday or a non-working day. 🎉</p>';
+                return;
+            }
+            
+            container.innerHTML = data.todayTimetable.map(cls => {
+                const isCompletedClass = cls.status === 'Completed' ? 'completed' : '';
+                const completedTag = cls.status === 'Completed' ? '<div class="completed-tag">Completed</div>' : '';
+                const batch = cls.batch || new Date().getFullYear();
+                
+                return `
+                <div class="course-card ${isCompletedClass}">
+                    ${completedTag}
+                    <div class="course-card-header"><h4>${cls.class_name}</h4></div>
+                    <div class="course-card-body">
+                        <div class="course-card-details">
+                            <p><span>Batch</span> ${batch}</p>
+                            <p><span>Department</span> ${cls.department}</p>
+                            <p><span>Class</span> Year ${cls.year} - Sem ${cls.semester} - Sec ${cls.section}</p>
+                            <p><span>Course Code</span> ${cls.course_code || 'N/A'}</p>
+                            <p><span>Time</span> ${formatTime12Hour(cls.start_time)} - ${formatTime12Hour(cls.end_time)}</p>
+                        </div>
+                        <div class="course-card-actions">
+                            <ul>
+                                <li><a href="#" onclick="showAttendanceTakingView('${cls.year}', '${cls.section}', '${cls.department}', '${cls.period_number}')">Attendance <i class="fas fa-chevron-right"></i></a></li>
+                                <li><a href="#" onclick="showMarkEntryView('${cls.year}', '${cls.section}', '${cls.department}')">Internal Mark <i class="fas fa-chevron-right"></i></a></li>
+                                <li><a href="#" onclick="showLessonPlanForCourse('${cls.course_code}', '${cls.class_name}')">Lesson Plan <i class="fas fa-chevron-right"></i></a></li>
+                                <li><a href="#" onclick="showAttendanceDetailsView('${cls.year}', '${cls.section}', '${cls.department}')">Attendance Report <i class="fas fa-chevron-right"></i></a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+        } catch (error) {
+            console.error("Error fetching today's workload:", error);
+            container.innerHTML = '<p style="color: red;">Could not load today\'s schedule.</p>';
+        }
+    }
+    
+    function showLessonPlanForCourse(courseCode, className) {
+        showFileUploadView(courseCode, className);
+    }
+    
+    async function showAttendanceTakingView(year, section, department, period) {
+        const container = document.getElementById('attendance-taking-view');
+        showView('attendance-taking-view');
+        container.innerHTML = `<div class="page-header">
+            <button class="back-button" onclick="showView('main-dashboard-view')"><i class="fas fa-arrow-left"></i> Back to Dashboard</button>
+            <h2>Take Attendance (Year: ${year}, Sec: ${section}, Period: ${period})</h2>
+            <button class="btn-primary" id="save-attendance-btn"><i class="fas fa-save"></i> Save Attendance</button>
+        </div>
+        <div class="data-table-container"><p>Loading students...</p></div>`;
+        try {
+            const res = await fetch(`http://localhost:3001/api/students/${department}/${year}/${section}`);
+            const data = await res.json();
+            if (!data.success) throw new Error(data.message);
+
+            let tableHTML = `<table class="data-table">
+                <thead><tr><th>Register No</th><th>Student Name</th><th>Status</th></tr></thead>
+                <tbody>`;
+            data.students.forEach(student => {
+                tableHTML += `
+                <tr data-reg-no="${student.register_number}">
+                    <td>${student.register_number}</td>
+                    <td>${student.student_name}</td>
+                    <td>
+                        <div class="attendance-btn-group">
+                            <button class="present active" data-status="Present">Present</button>
+                            <button class="absent" data-status="Absent">Absent</button>
+                            <button class="onduty" data-status="OnDuty">On Duty</button>
+                        </div>
+                        <div class="reason-container">
+                            <textarea placeholder="Enter reason for absence/on-duty..."></textarea>
+                        </div>
+                    </td>
+                </tr>`;
+            });
+            tableHTML += `</tbody></table>`;
+            container.querySelector('.data-table-container').innerHTML = tableHTML;
+            container.querySelectorAll('.attendance-btn-group button').forEach(button => {
+                button.addEventListener('click', function() {
+                    const studentRow = this.closest('tr');
+                    const reasonContainer = studentRow.querySelector('.reason-container');
+                    this.parentElement.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    studentRow.dataset.status = this.dataset.status;
+                    if (this.dataset.status === 'Absent' || this.dataset.status === 'OnDuty') {
+                        reasonContainer.style.display = 'block';
+                    } else {
+                        reasonContainer.style.display = 'none';
+                        reasonContainer.querySelector('textarea').value = '';
+                    }
+                });
+            });
+            document.getElementById('save-attendance-btn').onclick = () => saveAttendance(year, section, department, period);
+        } catch(error) {
+            console.error("Failed to load students for attendance:", error);
+            container.querySelector('.data-table-container').innerHTML = `<p style="color:red;">Could not load student list.</p>`;
+        }
+    }
+        
+    async function saveAttendance(year, section, department, period) {
+        const saveBtn = document.getElementById('save-attendance-btn');
+        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        saveBtn.disabled = true;
+        const attendanceData = [];
+        document.querySelectorAll('#attendance-taking-view tbody tr').forEach(row => {
+            const activeBtn = row.querySelector('.attendance-btn-group button.active');
+            attendanceData.push({
+                student_reg_no: row.dataset.regNo,
+                status: activeBtn.dataset.status,
+                reason: row.querySelector('.reason-container textarea').value,
+                attendance_date: new Date().toISOString().slice(0, 10),
+                period_number: period,
+                staff_id: userProfileData.id 
+            });
+        });
+        try {
+            const res = await fetch(`http://localhost:3001/api/attendance/save`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ attendanceData })
+            });
+            const result = await res.json();
+            if (!result.success) throw new Error(result.message);
+            alert('Attendance saved successfully!');
+            showView('main-dashboard-view');
+        } catch(error) {
+            console.error('Error saving attendance:', error);
+            alert('Failed to save attendance.');
+        } finally {
+            saveBtn.innerHTML = '<i class="fas fa-save"></i> Save Attendance';
+            saveBtn.disabled = false;
+        }
+    }
+
+    async function populateMarkManagementView() {
+        const container = document.getElementById('mark-management-view');
+        showView('mark-management-view');
+        container.innerHTML = `<div class="page-header"><button class="back-button" onclick="showView('main-dashboard-view')"><i class="fas fa-arrow-left"></i> Back</button><h2>Mark Management - Select Class</h2><div></div></div><div id="staff-mark-class-grid" class="hod-class-grid"><p>Loading your classes...</p></div>`;
+        try {
+            const res = await fetch(`http://localhost:3001/api/staff/my-classes/${userProfileData.email}`);
+            const data = await res.json();
+            if (!data.success) throw new Error(data.message);
+            const gridContainer = document.getElementById('staff-mark-class-grid');
+            if (data.classes.length === 0) {
+                gridContainer.innerHTML = '<p>You have not been assigned to any classes.</p>'; return;
+            }
+            gridContainer.innerHTML = data.classes.map(cls => `<div class="hod-class-card"><div class="class-card-icon"><i class="fas fa-marker"></i></div><h4 class="class-card-title">Year ${cls.year} - Section ${cls.section}</h4><p class="class-card-dept">${cls.department}</p><button class="btn-primary btn-view" onclick="showMarkEntryView('${cls.year}', '${cls.section}', '${cls.department}')">Enter Marks</button></div>`).join('');
+        } catch (error) {
+            console.error("Failed to load classes for marks:", error);
+            document.getElementById('staff-mark-class-grid').innerHTML = `<p style="color:red;">Could not load your class list.</p>`;
+        }
+    }
+    
+    async function populateAttendanceManagementView() {
+        const container = document.getElementById('attendance-management-view');
+        showView('attendance-management-view');
+        container.innerHTML = `<div class="page-header"><button class="back-button" onclick="showView('main-dashboard-view')"><i class="fas fa-arrow-left"></i> Back</button><h2>Attendance Report - Select Class</h2><div></div></div><div id="staff-attendance-class-grid" class="hod-class-grid"><p>Loading your classes...</p></div>`;
+        try {
+            const res = await fetch(`http://localhost:3001/api/staff/my-classes/${userProfileData.email}`);
+            const data = await res.json();
+            if (!data.success) throw new Error(data.message);
+            const gridContainer = document.getElementById('staff-attendance-class-grid');
+            if (data.classes.length === 0) {
+                gridContainer.innerHTML = '<p>You have not been assigned to any classes.</p>'; return;
+            }
+            gridContainer.innerHTML = data.classes.map(cls => `<div class="hod-class-card"><div class="class-card-icon"><i class="fas fa-calendar-check"></i></div><h4 class="class-card-title">Year ${cls.year} - Section ${cls.section}</h4><p class="class-card-dept">${cls.department}</p><button class="btn-primary btn-view" onclick="showAttendanceDetailsView('${cls.year}', '${cls.section}', '${cls.department}')">Get Report</button></div>`).join('');
+        } catch (error) {
+            console.error("Failed to load classes for attendance report:", error);
+            document.getElementById('staff-attendance-class-grid').innerHTML = `<p style="color:red;">Could not load your class list.</p>`;
+        }
+    }
+
+    function populateNewProfilePage(profile) {
+        const formContainer = document.getElementById('user-profile-form');
+        const imageUrl = profile.profile_picture_url ? `${profile.profile_picture_url}?t=${new Date().getTime()}` : 'https://placehold.co/150x150/cccccc/ffffff?text=No+Img';
+        formContainer.innerHTML = `
+            <div class="profile-page-grid">
+                <div class="profile-picture-container">
+                    <img src="${imageUrl}" alt="Profile Picture" id="profile-image-preview">
+                    <label for="profile-picture-upload" class="btn-primary btn-upload"><i class="fas fa-upload"></i> Upload</label>
+                    <input type="file" id="profile-picture-upload" accept="image/*">
+                </div>
+                <div class="profile-details-container">
+                    <div class="form-grid">
+                        <div class="form-group"><label>Full Name</label><input type="text" value="${profile.name}" readonly></div>
+                        <div class="form-group"><label>Email / Username</label><input type="email" value="${profile.email}" readonly></div>
+                        <div class="form-group"><label>Role</label><input type="text" value="${profile.role}" readonly></div>
+                        <div class="form-group" style="grid-column: 1 / -1;"><label>New Password</label><input type="password" id="new-password-field" placeholder="Enter new password to change" readonly></div>
+                    </div>
+                </div>
+            </div>`;
+        document.getElementById('edit-profile-btn').addEventListener('click', enableProfileEditing);
+        document.getElementById('save-profile-btn').addEventListener('click', saveProfileChanges);
+        document.getElementById('profile-picture-upload').addEventListener('change', previewProfileImage);
+    }
+    
+    function enableProfileEditing() {
+        document.getElementById('new-password-field').readOnly = false;
+        document.querySelector('.btn-upload').style.display = 'inline-flex';
+        document.getElementById('edit-profile-btn').style.display = 'none';
+        document.getElementById('save-profile-btn').style.display = 'inline-flex';
+    }
+
+    async function saveProfileChanges() {
+        const newPassword = document.getElementById('new-password-field').value;
+        const pictureFile = document.getElementById('profile-picture-upload').files[0];
+        const saveButton = document.getElementById('save-profile-btn');
+        saveButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        saveButton.disabled = true;
+        try {
+            if (newPassword) {
+                await fetch(`http://localhost:3001/api/profile/password`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: userProfileData.email, password: newPassword })
+                });
+            }
+            if (pictureFile) {
+                const formData = new FormData();
+                formData.append('profile_picture', pictureFile);
+                formData.append('email', userProfileData.email);
+                const response = await fetch(`http://localhost:3001/api/profile/picture`, { method: 'POST', body: formData });
+                const result = await response.json();
+                if (result.success) {
+                    userProfileData.profile_picture_url = result.filePath;
+                    localStorage.setItem('loggedInUser', JSON.stringify(userProfileData));
+                } else { throw new Error(result.message || 'Image upload failed'); }
+            }
+            alert("Profile changes saved successfully!");
+            await initializeDashboard(userProfileData);
+            populateNewProfilePage(userProfileData);
+        } catch (error) {
+            console.error("Error saving profile:", error);
+            alert("Error saving profile: " + error.message);
+        } finally {
+            document.getElementById('new-password-field').readOnly = true;
+            document.getElementById('new-password-field').value = '';
+            document.querySelector('.btn-upload').style.display = 'none';
+            document.getElementById('edit-profile-btn').style.display = 'inline-flex';
+            saveButton.style.display = 'none';
+            saveButton.innerHTML = '<i class="fas fa-save"></i> Save Changes';
+            saveButton.disabled = false;
+        }
+    }
+
+    function previewProfileImage(event) {
+        const reader = new FileReader();
+        reader.onload = function() { document.getElementById('profile-image-preview').src = reader.result; };
+        reader.readAsDataURL(event.target.files[0]);
+    }
+
+    async function showMarkEntryView(year, section, department) {
+        const container = document.getElementById('mark-entry-view');
+        showView('mark-entry-view');
+        container.innerHTML = `<p>Loading students and marks for ${year} Year, Section ${section}...</p>`;
+        try {
+            const res = await fetch(`http://localhost:3001/api/marks/${department}/${year}/${section}`);
+            const data = await res.json();
+            if (!data.success) throw new Error(data.message);
+            const markTypes = ['cat1_marks', 'cat2_marks', 'sac1_marks', 'sac2_marks', 'sac3_marks', 'sac4_marks', 'sac5_marks', 'internal_total'];
+            let tableHTML = `<div class="page-header"><button class="back-button" onclick="populateMarkManagementView()"><i class="fas fa-arrow-left"></i> Back</button><h2>Marks for ${year} Year - Sec ${section}</h2><div><button class="btn-primary btn-edit" id="edit-marks-btn"><i class="fas fa-edit"></i> Edit</button><button class="btn-primary btn-save" id="save-marks-btn" style="display:none;"><i class="fas fa-save"></i> Save</button><button class="btn-primary" id="report-marks-btn" style="background-color: var(--theme-secondary); color: var(--text-dark);"><i class="fas fa-file-pdf"></i> Report</button></div></div><div class="data-table-container"><table class="data-table marks-table" id="marks-entry-table"><thead><tr><th>Student Name</th><th>Register No</th><th>CAT-1</th><th>CAT-2</th><th>SAC-1</th><th>SAC-2</th><th>SAC-3</th><th>SAC-4</th><th>SAC-5</th><th>Total</th></tr></thead><tbody>`;
+            data.students.forEach(student => {
+                tableHTML += `<tr data-reg-no="${student.register_number}"><td>${student.student_name}</td><td>${student.register_number}</td>`;
+                markTypes.forEach(type => { tableHTML += `<td><input type="number" name="${type}" value="${student[type] || ''}" readonly></td>`; });
+                tableHTML += `</tr>`;
+            });
+            tableHTML += `</tbody></table></div>`;
+            container.innerHTML = tableHTML;
+            document.getElementById('edit-marks-btn').addEventListener('click', () => {
+                document.querySelectorAll('#marks-entry-table input').forEach(input => input.readOnly = false);
+                document.getElementById('edit-marks-btn').style.display = 'none';
+                document.getElementById('save-marks-btn').style.display = 'inline-flex';
+            });
+            document.getElementById('save-marks-btn').addEventListener('click', () => saveAllMarks(year, section, department));
+            document.getElementById('report-marks-btn').addEventListener('click', () => generateMarksPDF(year, section, department));
+        } catch (error) {
+            console.error("Failed to load marks entry view:", error);
+            container.innerHTML = `<p style="color:red;">Could not load student marks.</p>`;
+        }
+    }
+
+    async function saveAllMarks(year, section, department) {
+        const saveBtn = document.getElementById('save-marks-btn');
+        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        saveBtn.disabled = true;
+        const rows = document.querySelectorAll('#marks-entry-table tbody tr');
+        const marksData = [];
+        rows.forEach(row => {
+            const studentMarks = { reg_no: row.dataset.regNo };
+            row.querySelectorAll('input').forEach(input => { studentMarks[input.name] = input.value === '' ? null : parseFloat(input.value); });
+            marksData.push(studentMarks);
+        });
+        try {
+            const res = await fetch('http://localhost:3001/api/marks/save', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ marksData, year, section, department }) });
+            const result = await res.json();
+            if (!result.success) throw new Error(result.message);
+            alert('Marks saved successfully!');
+            document.querySelectorAll('#marks-entry-table input').forEach(input => input.readOnly = true);
+            document.getElementById('edit-marks-btn').style.display = 'inline-flex';
+            document.getElementById('save-marks-btn').style.display = 'none';
+        } catch (error) {
+            console.error('Error saving marks:', error);
+            alert('Failed to save marks.');
+        } finally {
+            saveBtn.innerHTML = '<i class="fas fa-save"></i> Save';
+            saveBtn.disabled = false;
+        }
+    }
+
+    function generateMarksPDF(year, section, department) {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        doc.setFontSize(16);
+        doc.text("Internal Marks Report", 14, 15);
+        doc.setFontSize(12);
+        doc.text(`Department: ${department}`, 14, 22);
+        doc.text(`Class: ${year} Year - Section ${section}`, 14, 29);
+        doc.autoTable({ html: '#marks-entry-table', startY: 35, theme: 'grid', headStyles: { fillColor: [244, 58, 9] } });
+        doc.save(`Marks_Report_${year}yr_${section}sec.pdf`);
+    }
+
+    function showAttendanceDetailsView(year, section, department) {
+        const container = document.getElementById('attendance-details-view');
+        showView('attendance-details-view');
+        container.innerHTML = `<div class="page-header"><button class="back-button" onclick="populateAttendanceManagementView()"><i class="fas fa-arrow-left"></i> Back</button><h2>Report for ${year} Year - Sec ${section}</h2><div><button class="btn-primary" id="download-attendance-pdf-btn" style="display:none; background-color: var(--theme-secondary); color: var(--text-dark);"><i class="fas fa-file-pdf"></i> Download</button></div></div><div class="data-table-container"><div class="filter-container" style="padding-bottom: 20px; border-bottom: 1px solid var(--border-color);"><div class="form-group"><label for="from-date">From Date</label><input type="date" id="from-date"></div><div class="form-group"><label for="to-date">To Date</label><input type="date" id="to-date"></div><button class="btn-primary" id="fetch-attendance-btn" style="align-self: flex-end;">View</button></div><div id="attendance-report-content" style="margin-top:20px;"><p>Please select a date range and click 'View'.</p></div></div>`;
+        document.getElementById('fetch-attendance-btn').addEventListener('click', () => fetchAndDisplayAttendanceReport(year, section, department));
+    }
+
+    async function fetchAndDisplayAttendanceReport(year, section, department) {
+        const fromDate = document.getElementById('from-date').value;
+        const toDate = document.getElementById('to-date').value;
+        const contentDiv = document.getElementById('attendance-report-content');
+        const fetchBtn = document.getElementById('fetch-attendance-btn');
+        if (!fromDate || !toDate) { alert('Please select both From and To dates.'); return; }
+        fetchBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Fetching...';
+        fetchBtn.disabled = true;
+        contentDiv.innerHTML = "<p>Loading report...</p>";
+        document.getElementById('download-attendance-pdf-btn').style.display = 'none';
+        try {
+            const res = await fetch(`http://localhost:3001/api/hod/attendance/by-date-range/${department}/${year}/${section}?fromDate=${fromDate}&toDate=${toDate}`);
+            const data = await res.json();
+            if (!data.success) throw new Error(data.message);
+            let reportHTML = '<table class="data-table" id="attendance-report-table"><thead><tr><th>Student Name</th><th>Register No</th><th>Present</th><th>Absent</th><th>On Duty</th><th>Total %</th></tr></thead><tbody>';
+            data.report.forEach(student => { reportHTML += `<tr><td>${student.student_name}</td><td>${student.register_number}</td><td>${student.present_count}</td><td>${student.absent_count}</td><td>${student.onduty_count}</td><td>${student.attendance_percentage}%</td></tr>`; });
+            reportHTML += "</tbody></table>";
+            contentDiv.innerHTML = reportHTML;
+            document.getElementById('download-attendance-pdf-btn').style.display = 'inline-flex';
+            document.getElementById('download-attendance-pdf-btn').onclick = () => generateAttendanceReportPDF(year, section, fromDate, toDate);
+        } catch (error) {
+            console.error("Error fetching attendance report:", error);
+            contentDiv.innerHTML = `<p style="color:red;">Failed to fetch attendance report.</p>`;
+        } finally {
+            fetchBtn.innerHTML = 'View Attendance';
+            fetchBtn.disabled = false;
+        }
+    }
+    
+    function generateAttendanceReportPDF(year, section, fromDate, toDate) {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        doc.setFontSize(16);
+        doc.text("Attendance Report", 14, 15);
+        doc.setFontSize(12);
+        doc.text(`Class: ${year} Year - Section ${section}`, 14, 22);
+        doc.text(`Period: ${fromDate} to ${toDate}`, 14, 29);
+        doc.autoTable({ html: '#attendance-report-table', startY: 35, theme: 'grid', headStyles: { fillColor: [244, 58, 9] } });
+        doc.save(`Attendance_Report_${year}yr_${section}sec.pdf`);
+    }
+
+    async function populateFullTimetableView() {
+        const container = document.getElementById('timetable-view');
+        showView('timetable-view');
+        container.innerHTML = `<div class="page-header"><button class="back-button" onclick="showView('main-dashboard-view')"><i class="fas fa-arrow-left"></i> Back</button><h2>Full Weekly Timetable</h2></div><p>Loading timetable...</p>`;
+        try {
+            const res = await fetch(`http://localhost:3001/api/staff/timetables/${userProfileData.id}`);
+            const timetable = await res.json();
+            if (timetable.length === 0) {
+                container.innerHTML += '<p>No classes found in your timetable.</p>';
+                return;
+            }
+            const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            let timetableGridHtml = '<div class="timetable-grid">';
+            daysOfWeek.forEach(day => {
+                const classesForDay = timetable.filter(cls => cls.day_of_week === day).sort((a, b) => a.start_time.localeCompare(b.start_time));
+                timetableGridHtml += `<div class="day-column"><h3>${day}</h3><ul>`;
+                if (classesForDay.length > 0) {
+                    classesForDay.forEach(cls => {
+                        timetableGridHtml += `
+                            <li>
+                                <span class="time">${cls.start_time.slice(0,5)} - ${cls.end_time.slice(0,5)}</span>
+                                <span>${cls.class_name}</span>
+                                <span class="class-details">Year ${cls.year}, Sec ${cls.section}</span>
+                                <span class="class-details">Course: ${cls.course_code || 'N/A'}</span>
+                            </li>`;
+                    });
+                } else {
+                    timetableGridHtml += '<li>No classes scheduled.</li>';
+                }
+                timetableGridHtml += '</ul></div>';
+            });
+            timetableGridHtml += '</div>';
+            container.innerHTML = `<div class="page-header"><button class="back-button" onclick="showView('main-dashboard-view')"><i class="fas fa-arrow-left"></i> Back</button><h2>Full Weekly Timetable</h2></div>` + timetableGridHtml;
+        } catch(error) {
+            console.error("Failed to load timetable:", error);
+            container.innerHTML += '<p style="color:red">Could not load timetable.</p>';
+        }
+    }
+
+    async function populateLessonPlanView() {
+        const container = document.getElementById('lesson-plan-view');
+        showView('lesson-plan-view');
+        container.innerHTML = `<div class="page-header"><button class="back-button" onclick="showView('main-dashboard-view')"><i class="fas fa-arrow-left"></i> Back</button><h2>Lesson Plan - Select Class</h2></div><div id="lesson-plan-class-grid" class="hod-class-grid"><p>Loading your classes...</p></div>`;
+        try {
+            const res = await fetch(`http://localhost:3001/api/staff/my-courses/${userProfileData.email}`);
+            const data = await res.json();
+            if (!data.success) throw new Error(data.message);
+            const gridContainer = document.getElementById('lesson-plan-class-grid');
+            if (data.courses.length === 0) {
+                gridContainer.innerHTML = '<p>You have not been assigned to any courses.</p>'; return;
+            }
+            gridContainer.innerHTML = data.courses.map(cls => `<div class="hod-class-card"><div class="class-card-icon"><i class="fas fa-book-open"></i></div><h4 class="class-card-title">${cls.class_name}</h4><p class="class-card-dept">Course: ${cls.course_code}</p><button class="btn-primary btn-view" onclick="showFileUploadView('${cls.course_code}', '${cls.class_name}')">Manage Files</button></div>`).join('');
+        } catch (error) {
+            console.error("Failed to load classes for lesson plan:", error);
+            document.getElementById('lesson-plan-class-grid').innerHTML = `<p style="color:red;">Could not load your class list.</p>`;
+        }
+    }
+
+    async function showFileUploadView(courseCode, className) {
+        const container = document.getElementById('file-upload-view');
+        showView('file-upload-view');
+        container.innerHTML = `
+            <div class="page-header">
+                <button class="back-button" onclick="populateLessonPlanView()"><i class="fas fa-arrow-left"></i> Back to Classes</button>
+                <h2>Lesson Plan for ${className} (${courseCode})</h2>
+            </div>
+            <div class="file-upload-container">
+                <div class="file-upload-box">
+                    <label for="file-upload-input" style="cursor: pointer;">
+                        <i class="fas fa-cloud-upload-alt" style="font-size: 3rem; color: var(--theme-primary);"></i>
+                        <p>Drag & drop files here, or click to browse.</p>
+                    </label>
+                    <input type="file" id="file-upload-input" multiple>
+                </div>
+                <button class="btn-primary" id="upload-btn" style="width: 100%; justify-content: center;"><i class="fas fa-upload"></i> Upload Selected Files</button>
+            </div>
+            <div class="data-table-container">
+                <h3>Uploaded Files</h3>
+                <table class="data-table" id="files-table">
+                    <thead><tr><th>File Name</th><th>Uploaded On</th><th>Action</th></tr></thead>
+                    <tbody><tr><td colspan="3">Loading files...</td></tr></tbody>
+                </table>
+            </div>`;
+        
+        document.getElementById('upload-btn').onclick = () => uploadFiles(courseCode, className);
+        
+        await loadUploadedFiles(courseCode, className);
+    }
+
+    async function loadUploadedFiles(courseCode, className) {
+        const tableBody = document.querySelector('#files-table tbody');
+        try {
+            const res = await fetch(`http://localhost:3001/api/lesson-plans/${courseCode}?staff_id=${userProfileData.id}`);
+            const data = await res.json();
+            if (!data.success) throw new Error(data.message);
+            if (data.files.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="3" style="text-align:center;">No files uploaded yet.</td></tr>';
+                return;
+            }
+            tableBody.innerHTML = data.files.map(file => `
+                <tr>
+                    <td><a href="http://localhost:3001${file.file_path}" target="_blank">${file.file_name}</a></td>
+                    <td>${new Date(file.uploaded_at).toLocaleString()}</td>
+                    <td><button class="btn-primary" style="background-color: #EF4444;" onclick="deleteFile(${file.id}, '${file.course_code}', '${className}')"><i class="fas fa-trash"></i></button></td>
+                </tr>
+            `).join('');
+        } catch (error) {
+            console.error("Error loading files:", error);
+            tableBody.innerHTML = '<tr><td colspan="3" style="color:red;">Could not load files.</td></tr>';
+        }
+    }
+    
+    async function uploadFiles(courseCode, className) {
+        const fileInput = document.getElementById('file-upload-input');
+        const uploadBtn = document.getElementById('upload-btn');
+        if (fileInput.files.length === 0) {
+            alert('Please select at least one file to upload.');
+            return;
+        }
+
+        uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
+        uploadBtn.disabled = true;
+
+        const formData = new FormData();
+        for (const file of fileInput.files) {
+            formData.append('lesson_plans', file);
+        }
+        formData.append('staff_id', userProfileData.id);
+        formData.append('course_code', courseCode);
+
+        try {
+            const res = await fetch('http://localhost:3001/api/lesson-plans/upload', {
+                method: 'POST',
+                body: formData
+            });
+            const result = await res.json();
+            if (!result.success) throw new Error(result.message);
+            alert('Files uploaded successfully!');
+            showFileUploadView(courseCode, className); // Refresh the view
+        } catch (error) {
+            console.error('Error uploading files:', error);
+            alert('File upload failed.');
+        } finally {
+            uploadBtn.innerHTML = '<i class="fas fa-upload"></i> Upload Selected Files';
+            uploadBtn.disabled = false;
+        }
+    }
+
+    async function deleteFile(fileId, courseCode, className) {
+        if (!confirm('Are you sure you want to delete this file?')) return;
+        try {
+            const res = await fetch(`http://localhost:3001/api/lesson-plans/delete/${fileId}`, { method: 'DELETE' });
+            const result = await res.json();
+            if (!result.success) throw new Error(result.message);
+            alert('File deleted successfully!');
+            await loadUploadedFiles(courseCode, className); // Refresh the file list
+        } catch (error) {
+            console.error('Error deleting file:', error);
+            alert('Failed to delete file.');
+        }
+    }
+
+    async function populateCalendarView() {
+        const container = document.getElementById('calendar-view');
+        showView('calendar-view');
+        container.innerHTML = `<div class="page-header"><button class="back-button" onclick="showView('main-dashboard-view')"><i class="fas fa-arrow-left"></i> Back</button><h2>Academic Calendar</h2></div><div id="staff-calendar-container" class="calendar-container"><p>Loading calendar...</p></div>`;
+        
+        const now = new Date();
+        await renderCalendar(now.getFullYear(), now.getMonth());
+    }
+    
+    async function renderCalendar(year, month) {
+        const container = document.getElementById('staff-calendar-container');
+        const events = await fetchCalendarEvents(year, month);
+        const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        
+        let calendarHTML = `
+            <div class="calendar-header">
+                <button id="prev-month"><i class="fas fa-chevron-left"></i></button>
+                <h3>${monthNames[month]} ${year}</h3>
+                <button id="next-month"><i class="fas fa-chevron-right"></i></button>
+            </div>
+            <div class="calendar-grid">
+                <div class="calendar-day-name">Sun</div>
+                <div class="calendar-day-name">Mon</div>
+                <div class="calendar-day-name">Tue</div>
+                <div class="calendar-day-name">Wed</div>
+                <div class="calendar-day-name">Thu</div>
+                <div class="calendar-day-name">Fri</div>
+                <div class="calendar-day-name">Sat</div>
+            `;
+
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+        for (let i = 0; i < firstDay; i++) {
+            calendarHTML += `<div class="calendar-day not-current-month"></div>`;
+        }
+
+        for (let day = 1; day <= daysInMonth; day++) {
+            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            const dayEvents = events.filter(e => e.calendar_date === dateStr);
+            let dayClass = 'calendar-day';
+            let dayActivity = '';
+            
+            if (dayEvents.length > 0) {
+                if(dayEvents[0].is_working_day === 0) dayClass += ' holiday';
+                dayActivity = `<div class="day-activity">${dayEvents[0].activity_description}</div>`;
+            }
+
+            calendarHTML += `<div class="${dayClass}" data-date="${dateStr}">
+                                <div class="day-number">${day}</div>
+                                ${dayActivity}
+                             </div>`;
+        }
+        
+        calendarHTML += '</div>';
+        container.innerHTML = calendarHTML;
+
+        document.getElementById('prev-month').onclick = () => {
+            const newDate = new Date(year, month - 1);
+            renderCalendar(newDate.getFullYear(), newDate.getMonth());
+        };
+        document.getElementById('next-month').onclick = () => {
+            const newDate = new Date(year, month + 1);
+            renderCalendar(newDate.getFullYear(), newDate.getMonth());
+        };
+
+        container.querySelectorAll('.calendar-day[data-date]').forEach(dayCell => {
+            dayCell.onclick = () => {
+                const date = dayCell.dataset.date;
+                const dayEvents = events.filter(e => e.calendar_date === date);
+                showEventsForDate(date, dayEvents);
+            };
+        });
+    }
+
+    async function fetchCalendarEvents(year, month) {
+        try {
+            const res = await fetch(`http://localhost:3001/api/admin/calendar?year=${year}&month=${month + 1}`);
+            const data = await res.json();
+            return data.success ? data.data : [];
+        } catch (error) {
+            console.error('Failed to fetch calendar events:', error);
+            return [];
+        }
+    }
+
+    function showEventsForDate(date, events) {
+        const modal = document.getElementById('event-details-modal');
+        const title = document.getElementById('event-details-title');
+        const content = document.getElementById('event-details-content');
+        
+        title.textContent = `Details for ${new Date(date + 'T00:00:00').toLocaleDateString()}`;
+        
+        if (events.length > 0) {
+            content.innerHTML = `<ul>${events.map(event => `
+                <li>
+                    <h4>${event.activity_description}</h4>
+                    <p>${event.is_working_day ? 'Working Day' : 'Non-Working Day / Holiday'}</p>
+                </li>
+            `).join('')}</ul>`;
+        } else {
+            content.innerHTML = `<p>This is a normal working day with no special events.</p>`;
+        }
+        modal.classList.add('active');
+    }
+    </script>
+</body>
+</html>

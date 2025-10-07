@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campus Connect - Erode Sengunthar Engineering College</title>
+    <!-- Google Fonts for a nice look -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- All CSS is inside this <style> tag -->
+    <style>
+        /* Basic Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #0f172a, #1e3a8a, #312e81);
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Main Section */
+        .hero {
+            min-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 40px 0;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .hero h1 span {
+            color: #facc15; /* Yellow color */
+        }
+
+        .hero h2 {
+            font-size: 2rem;
+            font-weight: 300;
+            margin-bottom: 1.5rem;
+        }
+
+        .hero p {
+            max-width: 700px;
+            font-size: 1.1rem;
+            color: #e0e7ff;
+            line-height: 1.6;
+            margin-bottom: 3rem;
+        }
+
+        .hero-button {
+            background-color: #facc15;
+            color: #1e293b;
+            font-size: 1.1rem;
+            font-weight: 600;
+            padding: 1rem 2.5rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .hero-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(250, 204, 21, 0.4);
+        }
+
+        /* Features Section */
+        .features {
+            background-color: rgba(0, 0, 0, 0.2);
+            padding: 3rem 0;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2rem;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .feature-item svg {
+            width: 32px;
+            height: 32px;
+            color: #facc15;
+        }
+
+        .feature-item h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        /* Responsive Design for smaller screens */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            .hero h2 {
+                font-size: 1.5rem;
+            }
+            .features-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        @media (max-width: 480px) {
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <main class="hero container">
+        <h1><span>CAMPUS</span> CONNECT</h1>
+        <h2>Empowering Education Through Digital Innovation</h2>
+        <p>
+            Streamline your academic management with our comprehensive platform designed for HODs and faculty members to efficiently manage classes, students, and academic performance.
+        </p>
+        <!-- This button will take us to the next page -->
+        <a href="Login.html" class="hero-button">Get Started</a>
+    </main>
+
+    <section class="features">
+        <div class="features-grid container">
+            <!-- Feature 1 -->
+            <div class="feature-item">
+                <!-- SVG Icon for Staff Management -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                <h3>Staff Management</h3>
+            </div>
+            <!-- Feature 2 -->
+            <div class="feature-item">
+                <!-- SVG Icon for Class Management -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
+                <h3>Class Management</h3>
+            </div>
+            <!-- Feature 3 -->
+            <div class="feature-item">
+                <!-- SVG Icon for Academic Excellence -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></svg>
+                <h3>Academic Excellence</h3>
+            </div>
+            <!-- Feature 4 -->
+            <div class="feature-item">
+                <!-- SVG Icon for Performance Analytics -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+                <h3>Performance Analytics</h3>
+            </div>
+        </div>
+    </section>
+
+</body>
+</html>

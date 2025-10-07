@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ESEC Admin Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <style>
+        :root {
+            --theme-primary: #f43a09;
+            --theme-secondary: #ffb766;
+            --theme-accent: #68d388;
+            --theme-light-accent: #c2edda;
+            --theme-bg-light: #FFFFFF;
+            --theme-bg-medium: #f8f9fa;
+            --text-dark: #212529;
+            --border-color: #dee2e6;
+            --glow-color: rgba(244, 58, 9, 0.6);
+            --holiday-color: #ffeef0; /* Added for Calendar */
+            --holiday-text: #d90429; /* Added for Calendar */
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        body { background-color: var(--theme-bg-medium); color: var(--text-dark); overflow-x: hidden; }
+        .sidebar { width: 260px; background: var(--theme-bg-light); border-right: 1px solid var(--border-color); position: fixed; top: 0; left: 0; height: 100vh; z-index: 1001; transform: translateX(-100%); transition: transform 0.4s ease; }
+        .sidebar.active { transform: translateX(0); }
+        .sidebar-header { padding: 20px; display: flex; justify-content: space-between; align-items: center; font-size: 1.5rem; font-weight: 600; color: var(--theme-primary); border-bottom: 1px solid var(--border-color); }
+        .sidebar-header .close-btn { font-size: 1.8rem; cursor: pointer; }
+        .sidebar-menu { list-style: none; padding-top: 20px; }
+        .sidebar-menu li a { display: flex; align-items: center; padding: 15px 25px; color: var(--text-dark); text-decoration: none; font-size: 1.1rem; border-left: 4px solid transparent; transition: all 0.3s; }
+        .sidebar-menu li a:hover, .sidebar-menu li a.active { background-color: #f1f1f1; border-left-color: var(--theme-primary); color: var(--theme-primary); }
+        .sidebar-menu li a i { margin-right: 15px; width: 20px; }
+        .header { background-color: var(--theme-bg-light); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); position: sticky; top: 0; z-index: 999; }
+        .hamburger-menu { font-size: 1.5rem; cursor: pointer; }
+        .college-title { display: flex; align-items: center; gap: 15px; position: absolute; left: 50%; transform: translateX(-50%); }
+        .college-title img { width: 45px; height: 45px; }
+        .college-title h1 { font-size: 1.3rem; font-weight: 600; white-space: nowrap; }
+        .header-right { display: flex; align-items: center; gap: 25px; }
+        .profile-container { position: relative; cursor: pointer; display: flex; align-items: center; gap: 10px; }
+        .profile-dropdown { position: absolute; top: 120%; right: 0; background-color: var(--theme-bg-light); border-radius: 8px; overflow: hidden; width: 180px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); transform: translateY(10px); opacity: 0; visibility: hidden; transition: all 0.3s ease; z-index:1000; }
+        .profile-dropdown.active { transform: translateY(0); opacity: 1; visibility: visible; }
+        .profile-dropdown a { display: flex; align-items: center; padding: 12px 15px; text-decoration: none; color: var(--text-dark); }
+        .profile-dropdown a i { margin-right: 10px; }
+        .profile-dropdown a:hover { background-color: var(--theme-light-accent); }
+        .main-content { transition: margin-left 0.4s ease; }
+        .sidebar.active ~ .main-content { margin-left: 260px; }
+        .page-content { padding: 30px; }
+        .page { display: none; } .page.active { display: block; animation: fadeIn 0.5s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; }
+        .action-cards-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 30px; margin-top: 20px; }
+        .action-card { background: var(--theme-bg-light); padding: 30px; border-radius: 15px; text-align: center; cursor: pointer; transition: all 0.3s ease; border: 1px solid var(--border-color); }
+        .action-card:hover { transform: translateY(-10px); box-shadow: 0 0 25px -5px var(--glow-color); }
+        .action-card .icon { font-size: 3.5rem; margin-bottom: 20px; color: var(--theme-primary); }
+        .action-card h3 { font-size: 1.3rem; font-weight: 500; }
+        .btn-primary { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; background-color: var(--theme-primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 1rem; font-weight: 500; transition: background-color 0.3s, transform 0.2s; }
+        .btn-primary:hover { background-color: #d32f00; transform: scale(1.05); }
+        .back-button { cursor: pointer; font-weight: 500; display: inline-flex; align-items: center; gap: 5px; transition: transform 0.3s ease; background: none; border:none; font-size:1rem; }
+        .back-button:hover { transform: translateX(-5px); color: var(--theme-primary); }
+        .form-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 1002; display: flex; justify-content: center; align-items: center; opacity: 0; visibility: hidden; transition: all 0.3s; }
+        .form-modal.active { opacity: 1; visibility: visible; }
+        .form-modal-content { background-color: var(--theme-bg-light); padding: 30px; border-radius: 15px; width: 90%; max-width: 900px; max-height: 90vh; overflow-y: auto; position: relative; transform: scale(0.9); transition: all 0.3s; }
+        .form-modal.active .form-modal-content { transform: scale(1); }
+        .form-modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .form-modal-header .close-form-btn { font-size: 1.8rem; cursor: pointer; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
+        .form-group { display: flex; flex-direction: column; }
+        .form-group label { margin-bottom: 8px; font-weight: 500; color: #555;}
+        .form-group input, .form-group select, .form-group textarea { padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 1rem; }
+        .form-actions { margin-top: 30px; text-align: right; }
+        .btn-save { background-color: var(--theme-accent); }
+        .btn-edit { background-color: var(--theme-secondary); color: var(--text-dark); }
+        .data-table-container { background: #fff; border-radius: 10px; padding: 20px; overflow-x: auto; margin-top: 20px; }
+        .data-table { width: 100%; border-collapse: collapse; }
+        .data-table th, .data-table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); vertical-align: middle; }
+        .data-table th { background-color: var(--theme-bg-medium); font-weight: 600; }
+        #headerProfilePic { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--theme-primary); object-fit: cover; }
+        .action-icons i { cursor: pointer; margin: 0 8px; font-size: 1.1rem; transition: color 0.3s, transform 0.2s; }
+        .action-icons i:hover { transform: scale(1.2); }
+        .action-icons .fa-edit { color: var(--theme-secondary); }
+        .action-icons .fa-trash-alt { color: var(--theme-primary); }
+        .close-btn, .close-form-btn { transition: transform 0.4s ease, color 0.3s ease; }
+        .close-btn:hover, .close-form-btn:hover { transform: rotate(180deg); color: var(--theme-primary); }
+        .hamburger-menu { transition: color 0.3s ease, transform 0.3s ease; }
+        .hamburger-menu:hover { transform: scale(1.1); color: var(--theme-primary); }
+        .profile-page-container { background-color: #fff; border-radius: 12px; padding: 30px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); }
+        .profile-page-grid { display: grid; grid-template-columns: 200px 1fr; gap: 40px; align-items: flex-start; }
+        .profile-picture-container { text-align: center; }
+        .profile-picture-container img { width: 180px; height: 180px; border-radius: 50%; object-fit: cover; border: 5px solid var(--theme-primary); margin-bottom: 15px; }
+        .profile-picture-container .btn-upload { display: none; width:100%; justify-content:center; }
+        .profile-picture-container input[type="file"] { display: none; }
+        .profile-details-container .form-group input[readonly] { background-color: #e9ecef; cursor: not-allowed; }
+        .profile-details-container .form-group input:not(:read-only):focus { outline: none; border-color: var(--theme-primary); box-shadow: 0 0 0 3px rgba(244, 58, 9, 0.1); }
+        .staff-grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
+        .staff-card { background: #fff; border-radius: 10px; padding: 20px; text-align: center; cursor: pointer; transition: transform 0.3s ease, box-shadow 0.3s ease; border: 1px solid var(--border-color); }
+        .staff-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        .staff-card i { font-size: 2.5rem; color: var(--theme-primary); margin-bottom: 15px; }
+        .staff-card h4 { font-size: 1.2rem; font-weight: 600; }
+        .staff-card p { color: #6c757d; }
+        .timetable-details-container h2 { font-size: 1.5rem; margin-bottom: 10px; }
+        .year-heading { font-size: 1.5rem; font-weight: 600; color: var(--text-dark); margin-top: 30px; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid var(--theme-primary); }
+        .year-heading:first-of-type { margin-top: 10px; }
+        .calendar-container { background: #fff; border-radius: 10px; padding: 20px; margin-top: 20px; }
+        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .calendar-header h3 { font-size: 1.5rem; }
+        .calendar-header button { background: none; border: none; font-size: 1.5rem; cursor: pointer; transition: color 0.3s; }
+        .calendar-header button:hover { color: var(--theme-primary); }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+        .calendar-day-name { text-align: center; font-weight: 600; color: #6c757d; padding: 10px 0; }
+        .calendar-day { border: 1px solid var(--border-color); border-radius: 8px; min-height: 120px; padding: 10px; cursor: pointer; transition: all 0.3s ease; display: flex; flex-direction: column; }
+        .calendar-day:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0,0,0,0.08); border-color: var(--theme-primary); }
+        .calendar-day.not-current-month { background-color: #f8f9fa; color: #adb5bd; pointer-events: none;}
+        .calendar-day.holiday { background-color: var(--holiday-color); border-color: var(--holiday-text); }
+        .calendar-day .day-number { font-size: 1.2rem; font-weight: 600; }
+        .calendar-day.holiday .day-number { color: var(--holiday-text); }
+        .calendar-day .day-activity { font-size: 0.8rem; margin-top: 5px; color: #495057; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .day-status-dot { height: 8px; width: 8px; border-radius: 50%; display: inline-block; margin-left: 5px; }
+        .day-status-dot.event { background-color: var(--theme-secondary); }
+        .day-status-dot.holiday { background-color: var(--holiday-text); }
+        .toggle-switch { position: relative; display: inline-block; width: 60px; height: 34px; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--theme-accent); }
+        input:focus + .slider { box-shadow: 0 0 1px var(--theme-accent); }
+        input:checked + .slider:before { transform: translateX(26px); }
+        .toggle-label { margin-left: 10px; font-weight: 500; }
+    </style>
+</head>
+<body>
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header"> ESEC Admin <i class="fas fa-times close-btn" id="close-sidebar-btn"></i></div>
+        <ul class="sidebar-menu">
+            <li><a href="#" class="nav-link active" data-page="home"><i class="fas fa-home"></i> Home</a></li>
+            <li><a href="#" class="nav-link" data-page="manage-students"><i class="fas fa-user-graduate"></i> Students</a></li>
+            <li><a href="#" class="nav-link" data-page="manage-staff"><i class="fas fa-chalkboard-teacher"></i> Staff</a></li>
+            <li><a href="#" class="nav-link" data-page="manage-timetables"><i class="fas fa-calendar-alt"></i> Timetables</a></li>
+            <li><a href="#" class="nav-link" data-page="academic-calendar"><i class="fas fa-calendar-check"></i> Academic Calendar</a></li>
+        </ul>
+    </nav>
+    <div class="main-content">
+        <header class="header">
+            <i class="fas fa-bars hamburger-menu" id="hamburger-menu"></i>
+            <div class="college-title">
+                <img src="/uploads/1st.jpg" alt="ESEC Logo">
+                <h1>ERODE SENGUNTHAR ENGINEERING COLLEGE</h1>
+            </div>
+            <div class="header-right">
+                <div class="profile-container" id="profile-container">
+                    <img src="https://i.pravatar.cc/150?u=admin" alt="Admin Photo" id="headerProfilePic">
+                    <div class="profile-dropdown" id="profile-dropdown">
+                        <a href="#" class="nav-link" data-page="user-profile"><i class="fas fa-user-edit"></i> User Profile</a>
+                        <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                    </div>
+                </div>
+            </div>
+        </header>
+        <main class="page-content" id="page-content">
+            <div id="home" class="page active">
+                <div class="page-header"> <h2 id="welcomeMessage">Welcome back, Admin</h2> </div>
+                <div class="action-cards-container">
+                   <div class="action-card nav-link" data-page="manage-students"> <div class="icon"><i class="fas fa-user-graduate"></i></div> <h3>Manage Students</h3> </div>
+                   <div class="action-card nav-link" data-page="manage-staff"> <div class="icon"><i class="fas fa-chalkboard-teacher"></i></div> <h3>Manage Staff</h3> </div>
+                   <div class="action-card nav-link" data-page="manage-timetables"> <div class="icon"><i class="fas fa-calendar-alt"></i></div> <h3>Manage Timetables</h3> </div>
+                   <div class="action-card nav-link" data-page="academic-calendar"> <div class="icon"><i class="fas fa-calendar-check"></i></div> <h3>Academic Calendar</h3> </div>
+                </div>
+            </div>
+            
+            <div id="manage-timetables" class="page">
+                 <div id="staffSelectionView">
+                     <div class="page-header">
+                         <button class="back-button nav-link" data-page="home"><i class="fas fa-arrow-left"></i> Back</button>
+                         <h2>Select a Staff Member</h2>
+                     </div>
+                     <div class="staff-grid-container" id="staffGridForTimetable"></div>
+                 </div>
+                 <div id="timetableDetailsView" style="display: none;">
+                     <div class="page-header">
+                         <button class="back-button" id="backToStaffListBtn"><i class="fas fa-arrow-left"></i> Back to Staff List</button>
+                         <h2 id="selectedStaffName"></h2>
+                         <button class="btn-primary btn-new-timetable" id="newTimetableBtn"><i class="fas fa-plus"></i> New Class Period</button>
+                     </div>
+                     <div class="data-table-container" id="weeklyTimetableContainer"></div>
+                 </div>
+            </div>
+
+            <div id="manage-students" class="page">
+                 <div id="student-class-selection-view">
+                     <div class="page-header">
+                         <button class="back-button nav-link" data-page="home"><i class="fas fa-arrow-left"></i> Back</button>
+                         <h2>Select Class to Manage Students</h2>
+                     </div>
+                     
+                     <h3 class="year-heading">Second Year</h3>
+                     <div class="action-cards-container">
+                         <div class="action-card" onclick="showStudentListView('2', 'A')">
+                             <div class="icon"><i class="fas fa-users"></i></div>
+                             <h3>II Year - Section A</h3>
+                         </div>
+                         <div class="action-card" onclick="showStudentListView('2', 'B')">
+                             <div class="icon"><i class="fas fa-users"></i></div>
+                             <h3>II Year - Section B</h3>
+                         </div>
+                         <div class="action-card" onclick="showStudentListView('2', 'C')">
+                             <div class="icon"><i class="fas fa-users"></i></div>
+                             <h3>II Year - Section C</h3>
+                         </div>
+                     </div>
+
+                     <h3 class="year-heading">Third Year</h3>
+                     <div class="action-cards-container">
+                         <div class="action-card" onclick="showStudentListView('3', 'A')">
+                             <div class="icon"><i class="fas fa-user-friends"></i></div>
+                             <h3>III Year - Section A</h3>
+                         </div>
+                          <div class="action-card" onclick="showStudentListView('3', 'B')">
+                             <div class="icon"><i class="fas fa-user-friends"></i></div>
+                             <h3>III Year - Section B</h3>
+                         </div>
+                     </div>
+
+                     <h3 class="year-heading">Fourth Year</h3>
+                     <div class="action-cards-container">
+                         <div class="action-card" onclick="showStudentListView('4', 'A')">
+                             <div class="icon"><i class="fas fa-user-tie"></i></div>
+                             <h3>IV Year - Section A</h3>
+                         </div>
+                         <div class="action-card" onclick="showStudentListView('4', 'B')">
+                             <div class="icon"><i class="fas fa-user-tie"></i></div>
+                             <h3>IV Year - Section B</h3>
+                         </div>
+                     </div>
+                 </div>
+                 
+                 <div id="student-list-view" style="display: none;">
+                     <div class="page-header">
+                         <button class="back-button" id="backToClassSelectionBtn"><i class="fas fa-arrow-left"></i> Back to Classes</button>
+                         <h2 id="studentListHeader">Student Management</h2>
+                         <button class="btn-primary" id="newStudentBtn"><i class="fas fa-plus"></i> New Student</button>
+                     </div>
+                     <div class="data-table-container" id="studentListContainer"></div>
+                 </div>
+            </div>
+
+            <div id="manage-staff" class="page">
+                 <div class="page-header">
+                     <button class="back-button nav-link" data-page="home"><i class="fas fa-arrow-left"></i> Back</button>
+                     <h2>Staff Management</h2>
+                     <button class="btn-primary" id="newStaffBtn"><i class="fas fa-plus"></i> New Staff</button>
+                 </div>
+                 <div class="data-table-container" id="staffListContainer"></div>
+            </div>
+
+            <div id="user-profile" class="page">
+                 <div class="page-header">
+                       <button class="back-button nav-link" data-page="home"><i class="fas fa-arrow-left"></i> Back</button>
+                     <h2>Edit User Profile</h2>
+                     <div class="form-actions">
+                         <button class="btn-primary btn-edit" id="editProfileBtn"><i class="fas fa-edit"></i> Edit</button>
+                         <button class="btn-primary btn-save" id="saveProfileBtn" style="display: none;"><i class="fas fa-save"></i> Save Changes</button>
+                     </div>
+                 </div>
+                 <div id="userProfileFormContainer" class="profile-page-container">
+                     <p>Loading profile...</p>
+                 </div>
+            </div>
+            
+            <div id="academic-calendar" class="page">
+                <div class="page-header">
+                    <button class="back-button nav-link" data-page="home"><i class="fas fa-arrow-left"></i> Back</button>
+                    <h2>Academic Calendar Management</h2>
+                    <button class="btn-primary" id="bulkImportBtn"><i class="fas fa-upload"></i> Bulk Import Calendar</button>
+                </div>
+                <div class="calendar-container">
+                    <div class="calendar-header">
+                        <button id="prevMonthBtn"><i class="fas fa-chevron-left"></i></button>
+                        <h3 id="currentMonthYear">October 2025</h3>
+                        <button id="nextMonthBtn"><i class="fas fa-chevron-right"></i></button>
+                    </div>
+                    <div class="calendar-grid">
+                        <div class="calendar-day-name">Sun</div>
+                        <div class="calendar-day-name">Mon</div>
+                        <div class="calendar-day-name">Tue</div>
+                        <div class="calendar-day-name">Wed</div>
+                        <div class="calendar-day-name">Thu</div>
+                        <div class="calendar-day-name">Fri</div>
+                        <div class="calendar-day-name">Sat</div>
+                    </div>
+                    <div class="calendar-grid" id="calendarDaysGrid"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="form-modal" id="studentFormModal">
+        <div class="form-modal-content">
+            <div class="form-modal-header"> <h2 id="studentModalTitle">New Student Entry</h2> <i class="fas fa-times close-form-btn"></i> </div>
+            <form id="studentForm">
+                <input type="hidden" id="studentId" name="studentId">
+                <div class="form-grid">
+                    <div class="form-group"><label>Student Name</label><input type="text" name="student_name" required></div>
+                    <div class="form-group"><label>Register Number</label><input type="text" name="register_number" required></div>
+                    <div class="form-group"><label>Roll Number</label><input type="text" name="roll_number" required></div>
+                    <div class="form-group"><label>Year of Study</label><select name="year_of_study"><option value="1st Year">1st Year</option><option value="2nd Year">2nd Year</option><option value="3rd Year">3rd Year</option><option value="4th Year">4th Year</option></select></div>
+                    <div class="form-group"><label>Department</label>
+                        <select name="department">
+                            <option>Artificial Intelligence & Data Science</option><option>Automobile Engineering</option><option>Biomedical Engineering</option><option>Biotechnology</option><option>Chemical Engineering</option><option>Civil Engineering</option><option>Computer Science and Engineering</option><option>Electrical and Electronics Engineering</option><option>Electronics and Communication Engineering</option><option>Food Technology</option><option>Information Technology</option><option>Mechanical Engineering</option><option>Mechatronics</option><option>Placement</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>Section</label><select name="section"><option>A</option><option>B</option><option>C</option><option>D</option></select></div>
+                    <div class="form-group"><label>Semester</label><select name="semester"><option>Odd</option><option>Even</option></select></div>
+                    <div class="form-group"><label>From Year</label><input type="number" name="from_year" placeholder="2022"></div>
+                    <div class="form-group"><label>To Year</label><input type="number" name="to_year" placeholder="2026"></div>
+                </div>
+                <div class="form-actions"><button type="submit" class="btn-primary btn-save">Save Student</button></div>
+            </form>
+        </div>
+    </div>
+    
+    <div class="form-modal" id="staffFormModal">
+        <div class="form-modal-content">
+            <div class="form-modal-header"> <h2 id="staffModalTitle">New Staff Entry</h2> <i class="fas fa-times close-form-btn"></i></div>
+            <form id="staffForm">
+                <input type="hidden" id="staffId" name="staffId">
+                <div class="form-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+                    <div class="form-group"><label>Prefix</label><select name="prefix"><option>Dr.</option><option>Mr.</option><option>Ms.</option><option>Mrs.</option></select></div>
+                    <div class="form-group"><label>First Name</label><input type="text" name="first_name" required></div>
+                    <div class="form-group"><label>Last Name</label><input type="text" name="last_name"></div>
+                    <div class="form-group"><label>Gender</label><select name="gender"><option>MALE</option><option>FEMALE</option><option>OTHERS</option></select></div>
+                    <div class="form-group"><label>Date of Birth</label><input type="date" name="date_of_birth"></div>
+                    <div class="form-group"><label>Blood Group</label><select name="blood_group"><option>O+</option><option>O-</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option></select></div>
+                    <div class="form-group"><label>Mobile Number</label><input type="tel" name="mobile_number"></div>
+                    <div class="form-group"><label>Email</label><input type="email" name="email" required></div>
+                    <div class="form-group"><label>Marital Status</label><select name="marital_status"><option>MARRIED</option><option>UNMARRIED</option></select></div>
+                    <div class="form-group"><label>Alternative Mobile Number</label><input type="tel" name="alternative_mobile_number"></div>
+                    <div class="form-group"><label>Alternative Email</label><input type="email" name="alternative_email"></div>
+                    <div class="form-group"><label>Aadhaar Number</label><input type="text" name="aadhaar_number"></div>
+                    <div class="form-group"><label>Religion</label><input type="text" name="religion"></div>
+                    <div class="form-group"><label>Mother Tongue</label><input type="text" name="mother_tongue"></div>
+                    <div class="form-group"><label>Nationality</label><input type="text" name="nationality" value="INDIAN"></div>
+                    <div class="form-group"><label>State</label><select name="state"><option>TAMIL NADU</option></select></div>
+                    <div class="form-group"><label>Profile Status</label><select name="profile_status"><option>ACTIVE</option><option>INACTIVE</option></select></div>
+                    <div class="form-group"><label>Department</label>
+                        <select name="department">
+                            <option>Aeronautical Engineering</option><option>Artificial Intelligence & Data Science</option><option>Automobile Engineering</option><option>Biomedical Engineering</option><option>Biotechnology</option><option>Chemical Engineering</option><option>Civil Engineering</option><option>Computer Science and Engineering</option><option>Electrical and Electronics Engineering</option><option>Electronics and Communication Engineering</option><option>Food Technology</option><option>Information Technology</option><option>Mechanical Engineering</option><option>Mechatronics</option><option>Administration</option><option>Placement</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>Username</label><input type="text" name="user_name" placeholder="Same as email usually"></div>
+                    <div class="form-group"><label>Password</label><input type="password" name="password" required></div>
+                    <div class="form-group"><label>Role</label><select name="role"><option>Staff</option><option>HOD</option><option>Admin</option></select></div>
+                </div>
+                <div class="form-actions"><button type="submit" class="btn-primary btn-save">Save Staff</button></div>
+            </form>
+        </div>
+    </div>
+
+    <div class="form-modal" id="timetableFormModal">
+        <div class="form-modal-content">
+            <div class="form-modal-header"> <h2 id="timetableModalTitle">New Class Period</h2> <i class="fas fa-times close-form-btn"></i> </div>
+            <form id="timetableForm">
+                <input type="hidden" id="timetableId">
+                <input type="hidden" id="staffEmailForTimetable">
+                <div class="form-grid">
+                    <div class="form-group"><label>Year</label><select name="year" required><option value="1">1st Year</option><option value="2">2nd Year</option><option value="3">3rd Year</option><option value="4">4th Year</option></select></div>
+                    <div class="form-group"><label>Section</label><select name="section" required><option>A</option><option>B</option><option>C</option><option>D</option></select></div>
+                    <div class="form-group"><label>Semester</label>
+                        <select name="semester" required>
+                            <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option>
+                            <option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>Department</label>
+                        <select name="department" required>
+                            <option>Aeronautical Engineering</option><option>Artificial Intelligence & Data Science</option><option>Automobile Engineering</option><option>Biomedical Engineering</option><option>Biotechnology</option><option>Chemical Engineering</option><option>Civil Engineering</option><option>Computer Science and Engineering</option><option>Electrical and Electronics Engineering</option><option>Electronics and Communication Engineering</option><option>Food Technology</option><option>Information Technology</option><option>Mechanical Engineering</option><option>Mechatronics</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>Class / Subject Name</label><input type="text" name="class_name" required></div>
+                    <div class="form-group"><label>Course Code</label><input type="text" name="course_code" placeholder="e.g., 19CS704" required></div>
+                    <div class="form-group"><label>Day of Week</label><select name="day_of_week" required><option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option><option>Saturday</option></select></div>
+                    <div class="form-group"><label>Start Time</label><input type="time" name="start_time" required></div>
+                    <div class="form-group"><label>End Time</label><input type="time" name="end_time" required></div>
+                    <div class="form-group"><label>Period Number</label>
+                        <select name="period_number" required>
+                            <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option>
+                            <option value="5">5</option><option value="6">6</option><option value="7">7</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-actions"><button type="submit" class="btn-primary btn-save">Save Class</button></div>
+            </form>
+        </div>
+    </div>
+    
+    <div class="form-modal" id="bulkImportModal">
+        <div class="form-modal-content" style="max-width: 800px;">
+            <div class="form-modal-header">
+                <h2><i class="fas fa-upload"></i> Bulk Import Calendar Data</h2>
+                <i class="fas fa-times close-form-btn"></i>
+            </div>
+            <form id="bulkImportForm">
+                <div class="form-group">
+                    <label>Paste Calendar Data (JSON Format)</label>
+                    <textarea id="calendarDataInput" rows="15" style="width: 100%; font-family: monospace; font-size: 0.9rem;" placeholder="[&#10;  {&#10;    &quot;date&quot;: &quot;2025-09-30&quot;,&#10;    &quot;is_working_day&quot;: false,&#10;    &quot;activity&quot;: &quot;Holiday&quot;&#10;  },&#10;  ...&#10;]"></textarea>
+                    <small>Provide data as an array of objects. Each object must have 'date' (YYYY-MM-DD), 'is_working_day' (true/false), and 'activity' (string).</small>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary btn-save"><i class="fas fa-check-circle"></i> Import Data</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div class="form-modal" id="dayEditModal">
+        <div class="form-modal-content" style="max-width: 500px;">
+            <div class="form-modal-header">
+                <h2 id="dayEditModalTitle">Edit Day</h2>
+                <i class="fas fa-times close-form-btn"></i>
+            </div>
+            <form id="dayEditForm">
+                <input type="hidden" id="editingDate" name="date">
+                <div class="form-group">
+                    <label>Status</label>
+                    <div style="display: flex; align-items: center; padding: 10px 0;">
+                        <span class="toggle-label">Non-Working Day</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="isWorkingDayToggle">
+                            <span class="slider"></span>
+                        </label>
+                        <span class="toggle-label">Working Day</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="dayActivityInput">Activity / Event Description</label>
+                    <textarea id="dayActivityInput" name="activity" rows="4"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary btn-save"><i class="fas fa-save"></i> Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const API_URL = 'http://localhost:3001';
+    let currentUser = null; 
+
+    // All element selectors
+    const sidebar = document.getElementById('sidebar');
+    const hamburgerMenu = document.getElementById('hamburger-menu');
+    const closeSidebarBtn = document.getElementById('close-sidebar-btn');
+    const profileContainer = document.getElementById('profile-container');
+    const profileDropdown = document.getElementById('profile-dropdown');
+    const navLinks = document.querySelectorAll('.nav-link');
+    const pages = document.querySelectorAll('.page');
+    const newStudentBtn = document.getElementById('newStudentBtn');
+    const newStaffBtn = document.getElementById('newStaffBtn');
+    const studentFormModal = document.getElementById('studentFormModal');
+    const staffFormModal = document.getElementById('staffFormModal');
+    const closeFormBtns = document.querySelectorAll('.close-form-btn');
+    const studentForm = document.getElementById('studentForm');
+    const staffForm = document.getElementById('staffForm');
+    const studentListContainer = document.getElementById('studentListContainer');
+    const staffListContainer = document.getElementById('staffListContainer');
+    const studentModalTitle = document.getElementById('studentModalTitle');
+    const staffModalTitle = document.getElementById('staffModalTitle');
+    const userProfileFormContainer = document.getElementById('userProfileFormContainer');
+    const editProfileBtn = document.getElementById('editProfileBtn');
+    const saveProfileBtn = document.getElementById('saveProfileBtn');
+    const welcomeMessage = document.getElementById('welcomeMessage');
+    const headerProfilePic = document.getElementById('headerProfilePic');
+    const logoutBtn = document.getElementById('logoutBtn');
+    
+    // Timetable elements
+    const staffGridForTimetable = document.getElementById('staffGridForTimetable');
+    const staffSelectionView = document.getElementById('staffSelectionView');
+    const timetableDetailsView = document.getElementById('timetableDetailsView');
+    const selectedStaffName = document.getElementById('selectedStaffName');
+    const newTimetableBtn = document.getElementById('newTimetableBtn');
+    const weeklyTimetableContainer = document.getElementById('weeklyTimetableContainer');
+    const timetableFormModal = document.getElementById('timetableFormModal');
+    const timetableForm = document.getElementById('timetableForm');
+    const timetableModalTitle = document.getElementById('timetableModalTitle');
+    const backToStaffListBtn = document.getElementById('backToStaffListBtn');
+
+    // Student Management View Selectors
+    const studentClassSelectionView = document.getElementById('student-class-selection-view');
+    const studentListView = document.getElementById('student-list-view');
+    const backToClassSelectionBtn = document.getElementById('backToClassSelectionBtn');
+    const studentListHeader = document.getElementById('studentListHeader');
+    
+    // =================================================================
+    // === CORE NAVIGATION & INITIALIZATION ==========================
+    // =================================================================
+
+    function showPage(pageId) {
+        if (!pageId) return;
+        pages.forEach(p => p.classList.remove('active'));
+        const targetPage = document.getElementById(pageId);
+        if (targetPage) {
+            targetPage.classList.add('active');
+        }
+        
+        document.querySelectorAll('.sidebar-menu a.nav-link').forEach(l => l.classList.remove('active'));
+        const activeSidebarLink = document.querySelector(`.sidebar-menu a.nav-link[data-page="${pageId}"]`);
+        if (activeSidebarLink) {
+            activeSidebarLink.classList.add('active');
+        }
+
+        if (pageId === 'manage-students') {
+            studentListView.style.display = 'none';
+            studentClassSelectionView.style.display = 'block';
+        }
+        if (pageId === 'manage-staff') fetchAndDisplayStaff();
+        if (pageId === 'manage-timetables') {
+            staffSelectionView.style.display = 'block';
+            timetableDetailsView.style.display = 'none';
+            displayStaffListForTimetable();
+        }
+        if (pageId === 'user-profile') loadUserProfile();
+        // CORRECTED: This now correctly calls renderCalendar when the page is shown
+        if (pageId === 'academic-calendar') {
+            renderCalendar(cal_currentDate);
+        }
+    }
+
+    function loadUserData() {
+        const userDataString = localStorage.getItem('loggedInUser');
+        if (userDataString) {
+            currentUser = JSON.parse(userDataString);
+            if (welcomeMessage) { welcomeMessage.textContent = `Welcome back, ${currentUser.name}`; }
+            populateHeader();
+        } else {
+            alert('You are not logged in. Redirecting to login page.');
+            window.location.href = 'login.html';
+        }
+    }
+
+    function populateHeader() {
+        if (!currentUser) return;
+        const profilePic = document.getElementById('headerProfilePic');
+        const imageUrl = currentUser.profile_picture_url 
+            ? `http://localhost:3001${currentUser.profile_picture_url}?t=${new Date().getTime()}` 
+            : `https://placehold.co/40x40/cccccc/ffffff?text=${currentUser.name ? currentUser.name.charAt(0) : 'A'}`;
+        profilePic.src = imageUrl;
+        profilePic.onerror = () => { profilePic.src = `https://placehold.co/40x40/cccccc/ffffff?text=A`; };
+    }
+    
+    function setupEventListeners() {
+        hamburgerMenu.addEventListener('click', () => sidebar.classList.toggle('active'));
+        closeSidebarBtn.addEventListener('click', () => sidebar.classList.remove('active'));
+        
+        profileContainer.addEventListener('click', (e) => { 
+            e.stopPropagation(); 
+            profileDropdown.classList.toggle('active'); 
+        });
+
+        document.addEventListener('click', (e) => {
+           if (!profileContainer.contains(e.target)) {
+               profileDropdown.classList.remove('active');
+           }
+        });
+
+        navLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const targetLink = e.target.closest('.nav-link');
+                if (!targetLink) return;
+                const pageId = targetLink.getAttribute('data-page');
+                showPage(pageId);
+                if (sidebar.classList.contains('active')) {
+                    sidebar.classList.remove('active');
+                }
+                if (profileDropdown.classList.contains('active')) {
+                    profileDropdown.classList.remove('active');
+                }
+            });
+        });
+
+        logoutBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (confirm('Are you sure you want to logout?')) {
+                localStorage.removeItem('loggedInUser');
+                window.location.href = 'login.html';
+            }
+        });
+
+        editProfileBtn.addEventListener('click', enableProfileEditing);
+        saveProfileBtn.addEventListener('click', saveProfileChanges);
+
+        // CORRECTED: This now calls the function that sets up calendar button clicks
+        setupCalendarEventListeners();
+    }
+    
+    const apiCall = async (endpoint, method = 'GET', body = null) => {
+        try {
+            const options = { method, headers: { 'Content-Type': 'application/json' } };
+            if (body) { options.body = JSON.stringify(body); }
+            const response = await fetch(`${API_URL}/api${endpoint}`, options);
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Something went wrong');
+            }
+            return response.json();
+        } catch (error) {
+            console.error('API Call Error:', error);
+            alert(`Error: ${error.message}`);
+            return null;
+        }
+    };
+    
+    // =================================================================
+    // === USER PROFILE LOGIC ========================================
+    // =================================================================
+    async function loadUserProfile() {
+        const container = document.getElementById('userProfileFormContainer');
+        if (!currentUser || !currentUser.email) {
+            container.innerHTML = '<p style="color:red;">Could not load user profile. User data is missing.</p>';
+            return;
+        }
+        container.innerHTML = '<p>Loading profile...</p>';
+        try {
+            const profile = await apiCall(`/profile?email=${encodeURIComponent(currentUser.email)}`);
+            if (!profile) throw new Error("Profile data not found from API.");
+
+            currentUser.name = profile.name;
+            currentUser.profile_picture_url = profile.profile_picture_url;
+            localStorage.setItem('loggedInUser', JSON.stringify(currentUser));
+            populateHeader();
+
+            const imageUrl = profile.profile_picture_url 
+                ? `http://localhost:3001${profile.profile_picture_url}?t=${new Date().getTime()}` 
+                : `https://placehold.co/180x180/cccccc/ffffff?text=${profile.name ? profile.name.charAt(0) : 'A'}`;
+            
+            const formHTML = `
+                <div class="profile-page-grid">
+                    <div class="profile-picture-container">
+                        <img src="${imageUrl}" alt="Profile Picture" id="profileImagePreview" onerror="this.src='https://placehold.co/150x150?text=A';">
+                        <label for="profilePictureUpload" class="btn-primary btn-upload" style="width:100%; justify-content:center; margin-top:10px;"><i class="fas fa-upload"></i> Upload</label>
+                        <input type="file" id="profilePictureUpload" accept="image/*">
+                    </div>
+                    <div class="profile-details-container">
+                        <div class="form-group"><label>Full Name</label><input type="text" value="${profile.name || ''}" readonly></div>
+                        <div class="form-group"><label>Email</label><input type="text" value="${profile.email || ''}" readonly></div>
+                        <div class="form-group"><label>Role</label><input type="text" value="${profile.role || ''}" readonly></div>
+                        <div class="form-group"><label>New Password</label><input type="password" id="passwordField" placeholder="Enter new password to change" readonly></div>
+                    </div>
+                </div>`;
+            container.innerHTML = formHTML;
+            document.getElementById('profilePictureUpload').addEventListener('change', previewProfileImage);
+        } catch (error) {
+            container.innerHTML = `<p style="color:red;">Could not load profile details. ${error.message}</p>`;
+        }
+    };
+    
+    function enableProfileEditing() {
+        document.getElementById('passwordField').readOnly = false;
+        document.querySelector('.btn-upload').style.display = 'inline-flex';
+        editProfileBtn.style.display = 'none';
+        saveProfileBtn.style.display = 'inline-flex';
+    };
+
+    async function saveProfileChanges() {
+        const saveButton = document.getElementById('saveProfileBtn');
+        saveButton.disabled = true;
+        saveButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+        const newPassword = document.getElementById('passwordField').value;
+        const pictureFile = document.getElementById('profilePictureUpload').files[0];
+        try {
+            if (newPassword) {
+                const res = await apiCall(`/profile/password`, 'PATCH', { email: currentUser.email, password: newPassword });
+                if (!res || !res.success) throw new Error(res.message || 'Failed to update password.');
+            }
+            if (pictureFile) {
+                const formData = new FormData();
+                formData.append('profile_picture', pictureFile);
+                formData.append('email', currentUser.email);
+                const response = await fetch(`${API_URL}/api/profile/picture`, { method: 'POST', body: formData });
+                const result = await response.json();
+                if (!response.ok || !result.success) throw new Error(result.message || 'Failed to update picture.');
+            }
+            alert("Profile updated successfully!");
+        } catch (error) {
+            alert(`Error: ${error.message}`);
+        } finally {
+            document.getElementById('passwordField').readOnly = true;
+            document.getElementById('passwordField').value = '';
+            document.querySelector('.btn-upload').style.display = 'none';
+            document.getElementById('editProfileBtn').style.display = 'inline-flex';
+            saveButton.style.display = 'none';
+            saveButton.disabled = false;
+            saveButton.innerHTML = '<i class="fas fa-save"></i> Save Changes';
+            loadUserProfile(); 
+        }
+    };
+
+    function previewProfileImage(event) {
+        if (event.target.files && event.target.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('profileImagePreview').src = e.target.result;
+            }
+            reader.readAsDataURL(event.target.files[0]);
+        }
+    }
+    
+    // =================================================================
+    // === OTHER PAGE LOGIC (Students, Staff, Timetables) ============
+    // =================================================================
+
+    const fetchAndDisplayStudents = async (year, section) => {
+        const data = await apiCall(`/admin/students/${year}/${section}`);
+        if (!data || !data.students || data.students.length === 0) { 
+            studentListContainer.innerHTML = '<p>No students found for this class.</p>'; 
+            return; 
+        }
+        let tableHTML = `<table class="data-table"><thead><tr><th>Name</th><th>Register No</th><th>Department</th><th>Year</th><th>Actions</th></tr></thead><tbody>`;
+        data.students.forEach(student => {
+            tableHTML += `<tr><td>${student.student_name}</td><td>${student.register_number}</td><td>${student.department}</td><td>${student.year_of_study}</td><td class="action-icons"><i class="fas fa-edit edit-student-btn" data-id="${student.id}"></i><i class="fas fa-trash-alt delete-student-btn" data-id="${student.id}" data-year="${year}" data-section="${section}"></i></td></tr>`;
+        });
+        tableHTML += `</tbody></table>`;
+        studentListContainer.innerHTML = tableHTML;
+    };
+    
+    const openStudentModal = (student = null, year = null, section = null) => {
+        studentForm.reset();
+        document.getElementById('studentId').value = '';
+        const modalTitle = studentFormModal.querySelector('h2');
+        if (student) {
+            modalTitle.textContent = 'Edit Student Details';
+            document.getElementById('studentId').value = student.id;
+            for (const key in student) { if (studentForm.elements[key]) { studentForm.elements[key].value = student[key]; } }
+        } else {
+            modalTitle.textContent = 'New Student Entry';
+            if (year && section) {
+                const yearMap = {'2': '2nd Year', '3': '3rd Year', '4': '4th Year'};
+                studentForm.elements['year_of_study'].value = yearMap[year] || '1st Year';
+                studentForm.elements['section'].value = section;
+            }
+        }
+        studentFormModal.classList.add('active');
+    };
+    
+    window.showStudentListView = (year, section) => {
+        studentClassSelectionView.style.display = 'none';
+        studentListView.style.display = 'block';
+        studentListHeader.textContent = `Students - ${year} Year Section ${section}`;
+        newStudentBtn.dataset.year = year;
+        newStudentBtn.dataset.section = section;
+        fetchAndDisplayStudents(year, section);
+    };
+
+    backToClassSelectionBtn.addEventListener('click', () => {
+        studentListView.style.display = 'none';
+        studentClassSelectionView.style.display = 'block';
+    });
+
+    newStudentBtn.addEventListener('click', (e) => {
+        const year = e.currentTarget.dataset.year;
+        const section = e.currentTarget.dataset.section;
+        openStudentModal(null, year, section);
+    });
+    
+    studentListContainer.addEventListener('click', async (e) => {
+        const target = e.target.closest('i');
+        if (!target) return;
+        if (target.classList.contains('edit-student-btn')) {
+            const studentId = target.dataset.id;
+            const data = await apiCall(`/admin/students/${studentId}`);
+            if (data && data.student) { openStudentModal(data.student); }
+        } else if (target.classList.contains('delete-student-btn')) {
+            const studentId = target.dataset.id;
+            const year = target.dataset.year;
+            const section = target.dataset.section;
+            if (confirm('Are you sure?')) {
+                const result = await apiCall(`/admin/students/${studentId}`, 'DELETE');
+                if (result) { 
+                    alert(result.message); 
+                    fetchAndDisplayStudents(year, section);
+                }
+            }
+        }
+    });
+
+    studentForm.addEventListener('submit', async function(event) {
+        event.preventDefault();
+        const formData = new FormData(studentForm);
+        const studentData = Object.fromEntries(formData.entries());
+        const studentId = studentData.studentId;
+        let result;
+        if (studentId) { result = await apiCall(`/admin/students/${studentId}`, 'PUT', { studentData }); } 
+        else { result = await apiCall('/admin/students', 'POST', { studentData }); }
+        if (result) { 
+            alert(result.message); 
+            studentFormModal.classList.remove('active'); 
+            const year = studentData.year_of_study.charAt(0);
+            const section = studentData.section;
+            fetchAndDisplayStudents(year, section);
+        }
+    });
+    
+    const fetchAndDisplayStaff = async () => {
+        const data = await apiCall('/admin/staff');
+        if (!data || !data.staff) { staffListContainer.innerHTML = '<p>No staff found.</p>'; return; }
+        let tableHTML = `<table class="data-table"><thead><tr><th>Name</th><th>Email</th><th>Department</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead><tbody>`;
+        data.staff.forEach(staff => {
+            const fullName = `${staff.prefix || ''} ${staff.first_name} ${staff.last_name || ''}`.trim();
+            tableHTML += `<tr><td>${fullName}</td><td>${staff.email || 'N/A'}</td><td>${staff.department}</td><td>${staff.role || 'N/A'}</td><td>${staff.profile_status}</td><td class="action-icons"><i class="fas fa-edit edit-staff-btn" data-id="${staff.id}"></i><i class="fas fa-trash-alt delete-staff-btn" data-id="${staff.id}"></i></td></tr>`;
+        });
+        tableHTML += `</tbody></table>`;
+        staffListContainer.innerHTML = tableHTML;
+    };
+    const openStaffModal = (staff = null) => {
+        staffForm.reset();
+        document.getElementById('staffId').value = '';
+        const modalTitle = staffFormModal.querySelector('h2');
+        const passwordField = staffForm.querySelector('input[name="password"]');
+        if (staff) {
+            modalTitle.textContent = 'Edit Staff Details';
+            document.getElementById('staffId').value = staff.id;
+            passwordField.removeAttribute('required');
+            passwordField.placeholder = "Leave blank to keep unchanged";
+            for (const key in staff) {
+                if (key === 'date_of_birth' && staff[key]) { staffForm.elements[key].value = staff[key].split('T')[0]; } 
+                else if (staffForm.elements[key]) { staffForm.elements[key].value = staff[key]; }
+            }
+        } else {
+            modalTitle.textContent = 'New Staff Entry';
+            passwordField.setAttribute('required', 'required');
+            passwordField.placeholder = "";
+        }
+        staffFormModal.classList.add('active');
+    };
+    newStaffBtn.addEventListener('click', () => openStaffModal());
+    staffListContainer.addEventListener('click', async (e) => {
+        const target = e.target.closest('i');
+        if(!target) return;
+        if (target.classList.contains('edit-staff-btn')) {
+            const staffId = target.dataset.id;
+            const data = await apiCall(`/admin/staff/${staffId}`);
+            if (data && data.staff) { openStaffModal(data.staff); }
+        } else if (target.classList.contains('delete-staff-btn')) {
+            const staffId = target.dataset.id;
+            if (confirm('Are you sure?')) {
+                const result = await apiCall(`/admin/staff/${staffId}`, 'DELETE');
+                if (result) { alert(result.message); fetchAndDisplayStaff(); }
+            }
+        }
+    });
+    staffForm.addEventListener('submit', async function(event) {
+        event.preventDefault();
+        const formData = new FormData(staffForm);
+        const staffData = Object.fromEntries(formData.entries());
+        const staffId = staffData.staffId;
+        if (!staffData.user_name) { staffData.user_name = staffData.email; }
+        let result;
+        if (staffId) { result = await apiCall(`/admin/staff/${staffId}`, 'PUT', { staffData }); } 
+        else { result = await apiCall('/admin/staff', 'POST', { staffData }); }
+        if (result) { alert(result.message); staffFormModal.classList.remove('active'); fetchAndDisplayStaff(); }
+    });
+        
+    closeFormBtns.forEach(btn => {
+        btn.addEventListener('click', () => btn.closest('.form-modal').classList.remove('active'));
+    });
+
+    async function displayStaffListForTimetable() {
+        const data = await apiCall('/admin/staff-list');
+        staffGridForTimetable.innerHTML = '';
+        if (data && data.staffList) {
+            data.staffList.forEach(staff => {
+                const staffCard = document.createElement('div');
+                staffCard.className = 'staff-card';
+                staffCard.dataset.email = staff.email;
+                staffCard.dataset.name = staff.name;
+                staffCard.innerHTML = `<i class="fas fa-chalkboard-teacher"></i><h4>${staff.name}</h4><p>${staff.email}</p>`;
+                staffGridForTimetable.appendChild(staffCard);
+            });
+        }
+    }
+    
+    async function displayWeeklyTimetable(staffEmail, staffName) {
+        staffSelectionView.style.display = 'none';
+        timetableDetailsView.style.display = 'block';
+        selectedStaffName.textContent = `Timetable for ${staffName}`;
+        document.getElementById('staffEmailForTimetable').value = staffEmail;
+        
+        const data = await apiCall(`/admin/timetables/${staffEmail}`);
+        weeklyTimetableContainer.innerHTML = '';
+        let tableHTML = '<table class="data-table">';
+        const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        days.forEach(day => {
+            tableHTML += `<thead><tr><th colspan="6" style="background-color: #e9ecef;">${day}</th></tr></thead>`;
+            const periodsForDay = data && data.timetable ? data.timetable.filter(p => p.day_of_week === day).sort((a, b) => a.start_time.localeCompare(b.start_time)) : [];
+            
+            if (periodsForDay.length > 0) {
+                tableHTML += '<thead><tr><th>Time</th><th>Period</th><th>Subject Name</th><th>Course Code</th><th>Class Details</th><th>Actions</th></tr></thead><tbody>';
+                periodsForDay.forEach(period => {
+                    tableHTML += `<tr>
+                        <td>${period.start_time.substring(0,5)} - ${period.end_time.substring(0,5)}</td>
+                        <td>${period.period_number || '-'}</td>
+                        <td>${period.class_name}</td>
+                        <td>${period.course_code || 'N/A'}</td>
+                        <td>${period.department}<br><small style="color:#555;">Sem ${period.semester || '-'} - Sec ${period.section}</small></td>
+                        <td class="action-icons">
+                            <i class="fas fa-edit edit-period-btn" data-period='${JSON.stringify(period)}'></i>
+                            <i class="fas fa-trash-alt delete-period-btn" data-id="${period.id}"></i>
+                        </td>
+                    </tr>`;
+                });
+                tableHTML += '</tbody>';
+            } else {
+                tableHTML += `<tbody><tr><td colspan="6">No classes scheduled.</td></tr></tbody>`;
+            }
+        });
+        tableHTML += '</table>';
+        weeklyTimetableContainer.innerHTML = tableHTML;
+    }
+    
+    staffGridForTimetable.addEventListener('click', (e) => {
+        const card = e.target.closest('.staff-card');
+        if (card) {
+            displayWeeklyTimetable(card.dataset.email, card.dataset.name);
+        }
+    });
+
+    backToStaffListBtn.addEventListener('click', () => {
+        staffSelectionView.style.display = 'block';
+        timetableDetailsView.style.display = 'none';
+    });
+
+    function openTimetableModal(periodData = null) {
+        timetableForm.reset();
+        document.getElementById('timetableId').value = '';
+        const modalTitle = timetableFormModal.querySelector('h2');
+        if (periodData) {
+            modalTitle.textContent = "Edit Class Period";
+            document.getElementById('timetableId').value = periodData.id;
+            for(const key in periodData){
+                if(timetableForm.elements[key]) timetableForm.elements[key].value = periodData[key];
+            }
+        } else {
+            modalTitle.textContent = "New Class Period";
+        }
+        timetableFormModal.classList.add('active');
+    }
+    newTimetableBtn.addEventListener('click', () => openTimetableModal());
+    
+    timetableForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const timetableId = document.getElementById('timetableId').value;
+        const staffEmail = document.getElementById('staffEmailForTimetable').value;
+        const formData = new FormData(timetableForm);
+        const data = Object.fromEntries(formData.entries());
+        data.staff_email = staffEmail;
+        const result = timetableId ? await apiCall(`/admin/timetables/${timetableId}`, 'PUT', data) : await apiCall('/admin/timetables', 'POST', data);
+        if (result && result.success) {
+            alert(result.message);
+            timetableFormModal.classList.remove('active');
+            displayWeeklyTimetable(staffEmail, selectedStaffName.textContent.replace('Timetable for ', ''));
+        }
+    });
+    
+    weeklyTimetableContainer.addEventListener('click', async (e) => {
+        const target = e.target.closest('i');
+        if(!target) return;
+        if (target.classList.contains('edit-period-btn')) {
+            const periodData = JSON.parse(target.dataset.period);
+            openTimetableModal(periodData);
+        }
+        if (target.classList.contains('delete-period-btn')) {
+            const periodId = target.dataset.id;
+            if (confirm('Are you sure?')) {
+                const result = await apiCall(`/admin/timetables/${periodId}`, 'DELETE');
+                if (result && result.success) {
+                    alert(result.message);
+                    const staffEmail = document.getElementById('staffEmailForTimetable').value;
+                    displayWeeklyTimetable(staffEmail, selectedStaffName.textContent.replace('Timetable for ', ''));
+                }
+            }
+        }
+    });
+    
+    // Initial calls
+    loadUserData();
+    setupEventListeners();
+    showPage('home');
+
+    // =================================================================
+    // === ACADEMIC CALENDAR LOGIC (COMPLETE & CORRECTED) ==============
+    // =================================================================
+    let cal_currentDate = new Date(); // Using a unique name to avoid conflicts
+    let cal_dataCache = {};
+
+    // --- API Call to Fetch Calendar Data ---
+    async function fetchCalendarData(year, month) {
+        const cacheKey = `${year}-${month}`;
+        if (cal_dataCache[cacheKey]) {
+            return cal_dataCache[cacheKey];
+        }
+        try {
+            const response = await apiCall(`/admin/calendar?year=${year}&month=${month + 1}`);
+            if (response && response.success) {
+                const dataMap = response.data.reduce((acc, item) => {
+                    const dateKey = item.calendar_date.split('T')[0];
+                    acc[dateKey] = {
+                        is_working_day: item.is_working_day,
+                        activity: item.activity_description
+                    };
+                    return acc;
+                }, {});
+                cal_dataCache[cacheKey] = dataMap;
+                return dataMap;
+            }
+            return {};
+        } catch (error) {
+            console.error("Failed to fetch calendar data:", error);
+            return {};
+        }
+    }
+
+    // --- Render Calendar UI ---
+    async function renderCalendar(date) {
+        const calendarDaysGrid = document.getElementById('calendarDaysGrid');
+        const currentMonthYearEl = document.getElementById('currentMonthYear');
+        if (!calendarDaysGrid || !currentMonthYearEl) return;
+
+        calendarDaysGrid.innerHTML = '<p>Loading calendar...</p>';
+        const year = date.getFullYear();
+        const month = date.getMonth();
+        
+        currentMonthYearEl.textContent = date.toLocaleString('default', { month: 'long', year: 'numeric' });
+        const academicCalendarData = await fetchCalendarData(year, month);
+        
+        calendarDaysGrid.innerHTML = ''; // Clear loading message
+        const firstDayOfMonth = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+        for (let i = 0; i < firstDayOfMonth; i++) {
+            calendarDaysGrid.innerHTML += `<div class="calendar-day not-current-month"></div>`;
+        }
+
+        for (let i = 1; i <= daysInMonth; i++) {
+            const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+            const dayData = academicCalendarData[dateString];
+            const dayEl = document.createElement('div');
+            dayEl.className = 'calendar-day';
+            dayEl.dataset.date = dateString;
+            
+            let html = `<div class="day-number">${i}</div>`;
+            if (dayData) {
+                html += `<span class="day-status-dot ${dayData.is_working_day ? 'event' : 'holiday'}"></span>`;
+            }
+
+            if (dayData) {
+                dayEl.classList.toggle('holiday', !dayData.is_working_day);
+                html += `<div class="day-activity">${dayData.activity || ''}</div>`;
+            }
+            
+            dayEl.innerHTML = html;
+            calendarDaysGrid.appendChild(dayEl);
+        }
+    }
+
+    // --- Modal and Form Handling ---
+    async function openDayEditModal(dateString) {
+        const year = new Date(dateString).getFullYear();
+        const month = new Date(dateString).getMonth();
+        const monthData = await fetchCalendarData(year, month);
+        const data = monthData[dateString] || { is_working_day: true, activity: '' };
+        
+        document.getElementById('editingDate').value = dateString;
+        document.getElementById('dayEditModalTitle').textContent = `Edit Details for ${dateString}`;
+        document.getElementById('isWorkingDayToggle').checked = data.is_working_day;
+        document.getElementById('dayActivityInput').value = data.activity;
+        document.getElementById('dayEditModal').classList.add('active');
+    }
+
+    // --- Main function to setup all calendar event listeners ---
+    function setupCalendarEventListeners() {
+        const bulkImportBtn = document.getElementById('bulkImportBtn');
+        const bulkImportModal = document.getElementById('bulkImportModal');
+        const bulkImportForm = document.getElementById('bulkImportForm');
+        const prevMonthBtn = document.getElementById('prevMonthBtn');
+        const nextMonthBtn = document.getElementById('nextMonthBtn');
+        const calendarDaysGrid = document.getElementById('calendarDaysGrid');
+        const dayEditForm = document.getElementById('dayEditForm');
+
+        if (bulkImportBtn) bulkImportBtn.addEventListener('click', () => bulkImportModal.classList.add('active'));
+
+        if (bulkImportForm) bulkImportForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const jsonData = document.getElementById('calendarDataInput').value;
+            try {
+                const data = JSON.parse(jsonData);
+                const result = await apiCall('/admin/calendar/bulk-import', 'POST', data);
+                if (result && result.success) {
+                    alert("Data imported successfully!");
+                    bulkImportModal.classList.remove('active');
+                    cal_dataCache = {}; 
+                    await renderCalendar(cal_currentDate);
+                    bulkImportForm.reset();
+                } else {
+                    if(!result) alert("Import failed. Check console and server logs.");
+                }
+            } catch (error) {
+                alert("Error: Invalid JSON format.\n" + error.message);
+            }
+        });
+
+        if (prevMonthBtn) prevMonthBtn.addEventListener('click', () => {
+            cal_currentDate.setMonth(cal_currentDate.getMonth() - 1);
+            renderCalendar(cal_currentDate);
+        });
+
+        if (nextMonthBtn) nextMonthBtn.addEventListener('click', () => {
+            cal_currentDate.setMonth(cal_currentDate.getMonth() + 1);
+            renderCalendar(cal_currentDate);
+        });
+        
+        if (calendarDaysGrid) calendarDaysGrid.addEventListener('click', (e) => {
+            const dayCell = e.target.closest('.calendar-day');
+            if (dayCell && !dayCell.classList.contains('not-current-month') && dayCell.dataset.date) {
+                openDayEditModal(dayCell.dataset.date);
+            }
+        });
+
+        if (dayEditForm) dayEditForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const date = document.getElementById('editingDate').value;
+            const isWorkingDay = document.getElementById('isWorkingDayToggle').checked;
+            const activity = document.getElementById('dayActivityInput').value;
+
+            const payload = { calendar_date: date, is_working_day: isWorkingDay, activity_description: activity };
+
+            const result = await apiCall('/admin/calendar/update', 'POST', payload);
+            if (result && result.success) {
+                alert(`Changes for ${date} saved!`);
+                document.getElementById('dayEditModal').classList.remove('active');
+                cal_dataCache = {};
+                await renderCalendar(cal_currentDate);
+            }
+        });
+    }
+});
+</script>
+</body>
+</html>
